@@ -6,7 +6,7 @@
   "outputDirectory": "artifacts/resume-site/dist/public",
   "rewrites": [
     {
-      "source": "^/(?!api(?:/|$)).*$",
+      "source": "/:path((?!api(?:/|$)).*)",
       "destination": "/index.html"
     }
   ]
