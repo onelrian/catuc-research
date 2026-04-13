@@ -16,8 +16,8 @@ async function getApp() {
   return appPromise;
 }
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   req.url = normalizeApiPath(req.url);
   const app = await getApp();
   return app(req, res);
-}
+};
