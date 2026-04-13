@@ -50,13 +50,14 @@ jobs:
         uses: nwtgck/actions-netlify@v3.0
         with:
           publish-dir: artifacts/resume-site/dist/public
+          functions-dir: artifacts/resume-site/netlify/functions
           production-deploy: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           # Disable verbose comments to keep the log clean
           enable-commit-comment: false
           enable-pull-request-comment: false
           enable-commit-status: true
-          overwritable-pull-request-deploy-message: true
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+
