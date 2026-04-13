@@ -10,12 +10,12 @@
   directory = "artifacts/resume-site/netlify/functions"
   node_bundler = "esbuild"
 
-# 1. API Redirect: Routes all /api/* requests to the Netlify Function
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/api/:splat"
-  status = 200
-  force = true
+# 1. (Handled by Netlify V2 Function natively)
+# [[redirects]]
+#   from = "/api/*"
+#   to = "/.netlify/functions/api/:splat"
+#   status = 200
+#   force = true
 
 # 2. SPA routing: Ensures React Router works on page refreshes
 [[redirects]]
