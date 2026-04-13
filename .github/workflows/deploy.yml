@@ -42,6 +42,7 @@ jobs:
           # Build the main site
           pnpm run --filter @workspace/resume-site build
           # Build the standalone Netlify Function (Bakes in all dependencies)
+          export NODE_ENV=production
           pnpm run --filter @workspace/api-server build:netlify
 
       - name: Database Push
