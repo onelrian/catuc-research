@@ -18,7 +18,13 @@ export function useAuth(): AuthState {
   useEffect(() => {
     let cancelled = false;
 
-    fetch("/api/auth/user", { credentials: "include" })
+    fetch("/api/auth/user", {
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "cache-control": "no-store",
+      },
+    })
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json() as Promise<{ user: AuthUser | null }>;

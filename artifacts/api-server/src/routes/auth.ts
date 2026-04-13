@@ -9,15 +9,12 @@ import {
   getOidcConfig,
   getSessionId,
   createSession,
-  deleteSession,
   checkIsAdmin,
   SESSION_COOKIE,
-  SESSION_TTL,
-  ISSUER_URL,
+  getSessionCookieOptions,
+  getTransientCookieOptions,
   type SessionData,
 } from "../lib/auth";
-
-const OIDC_COOKIE_TTL = 10 * 60 * 1000;
 
 const router: IRouter = Router();
 
@@ -34,23 +31,19 @@ function getOrigin(req: Request): string {
 }
 
 function setSessionCookie(res: Response, sid: string) {
-  res.cookie(SESSION_COOKIE, sid, {
-    httpOnly: true,
-    secure: true,
-    sameSite: "lax",
-    path: "/",
-    maxAge: SESSION_TTL,
-  });
+  res.cookie(SESSION_COOKIE, sid, getSessionCookieOptions());
 }
 
 function setOidcCookie(res: Response, name: string, value: string) {
-  res.cookie(name, value, {
-    httpOnly: true,
-    secure: true,
-    sameSite: "lax",
-    path: "/",
-    maxAge: OIDC_COOKIE_TTL,
-  });
+  res.cookie(name, value, getTransientCookieOptions());
+}
+
+function clearOidcCookies(res: Response) {
+  const { maxAge: _maxAge, ...cookieOptions } = getTransientCookieOptions();
+  res.clearCookie("code_verifier", cookieOptions);
+  res.clearCookie("nonce", cookieOptions);
+  res.clearCookie("state", cookieOptions);
+  res.clearCookie("return_to", cookieOptions);
 }
 
 function getSafeReturnTo(value: unknown): string {
@@ -85,6 +78,10 @@ async function upsertUser(claims: Record<string, unknown>) {
 }
 
 router.get("/auth/user", (req: Request, res: Response) => {
+  res.setHeader("Cache-Control", "no-store, private, max-age=0");
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Vary", "Cookie");
+
   req.log.info(
     { authenticated: req.isAuthenticated(), userId: req.user?.id ?? null },
     "Auth user lookup",
@@ -137,6 +134,7 @@ router.get("/callback", async (req: Request, res: Response) => {
   const expectedState = req.cookies?.state;
 
   if (!codeVerifier || !expectedState) {
+    clearOidcCookies(res);
     res.redirect("/api/login");
     return;
   }
@@ -154,16 +152,14 @@ router.get("/callback", async (req: Request, res: Response) => {
       idTokenExpected: true,
     });
   } catch {
+    clearOidcCookies(res);
     res.redirect("/api/login");
     return;
   }
 
   const returnTo = getSafeReturnTo(req.cookies?.return_to);
 
-  res.clearCookie("code_verifier", { path: "/" });
-  res.clearCookie("nonce", { path: "/" });
-  res.clearCookie("state", { path: "/" });
-  res.clearCookie("return_to", { path: "/" });
+  clearOidcCookies(res);
 
   const claims = tokens.claims();
   if (!claims) {

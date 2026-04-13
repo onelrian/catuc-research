@@ -4,11 +4,41 @@ import { type Request, type Response } from "express";
 import { db, sessionsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import type { AuthUser } from "@workspace/api-zod";
+import type { CookieOptions } from "express";
 
 // Google OIDC discovery endpoint
 export const ISSUER_URL = process.env.ISSUER_URL ?? "https://accounts.google.com";
 export const SESSION_COOKIE = "sid";
 export const SESSION_TTL = 7 * 24 * 60 * 60 * 1000;
+export const OIDC_COOKIE_TTL = 10 * 60 * 1000;
+
+function shouldUseSecureCookies(): boolean {
+  return process.env.NODE_ENV !== "development";
+}
+
+function getCookieSameSite(): "lax" {
+  return "lax";
+}
+
+export function getSessionCookieOptions(): CookieOptions {
+  return {
+    httpOnly: true,
+    secure: shouldUseSecureCookies(),
+    sameSite: getCookieSameSite(),
+    path: "/",
+    maxAge: SESSION_TTL,
+  };
+}
+
+export function getTransientCookieOptions(): CookieOptions {
+  return {
+    httpOnly: true,
+    secure: shouldUseSecureCookies(),
+    sameSite: getCookieSameSite(),
+    path: "/",
+    maxAge: OIDC_COOKIE_TTL,
+  };
+}
 
 export function checkIsAdmin(email: string | null | undefined): boolean {
   if (!email) return false;
@@ -90,7 +120,8 @@ export async function clearSession(
   sid?: string,
 ): Promise<void> {
   if (sid) await deleteSession(sid);
-  res.clearCookie(SESSION_COOKIE, { path: "/" });
+  const { maxAge: _maxAge, ...cookieOptions } = getSessionCookieOptions();
+  res.clearCookie(SESSION_COOKIE, cookieOptions);
 }
 
 export function getSessionId(req: Request): string | undefined {

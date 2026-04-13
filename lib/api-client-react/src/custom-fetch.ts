@@ -78,6 +78,10 @@ function resolveUrl(input: RequestInfo | URL): string {
   return input.url;
 }
 
+function isBrowserRuntime(): boolean {
+  return typeof window !== "undefined" && typeof document !== "undefined";
+}
+
 function mergeHeaders(...sources: Array<HeadersInit | undefined>): Headers {
   const headers = new Headers();
 
@@ -360,7 +364,13 @@ export async function customFetch<T = unknown>(
 
   const requestInfo = { method, url: resolveUrl(input) };
 
-  const response = await fetch(input, { ...init, method, headers });
+  const response = await fetch(input, {
+    ...init,
+    method,
+    headers,
+    credentials: init.credentials ?? (isBrowserRuntime() ? "include" : "same-origin"),
+    cache: init.cache ?? "no-store",
+  });
 
   if (!response.ok) {
     const errorData = await parseErrorBody(response, method);
