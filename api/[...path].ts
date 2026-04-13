@@ -12,5 +12,10 @@ export default function handler(
   res: ServerResponse,
 ) {
   req.url = normalizeApiPath(req.url);
-  return app.handle(req as never, res as never);
+  const requestHandler = app as unknown as (
+    req: IncomingMessage & { url?: string | undefined },
+    res: ServerResponse,
+  ) => unknown;
+
+  return requestHandler(req, res);
 }
