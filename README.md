@@ -24,29 +24,44 @@ The platform is designed to provide a professional and secure environment for co
 
 ## Deployment Specifications
 
-The platform is optimized for deployment on **Netlify** using a monorepo structure.
+The platform is deployed on **Vercel** as a single monorepo project.
 
-### Unified Deployment (Netlify)
-The entire stack (Frontend + API) is deployed to Netlify:
-- **Frontend**: Deployed as a static SPA.
-- **API**: Deployed as a Netlify Function using `serverless-http` to wrap the Express app.
-- **Database**: Integrated via Netlify's Neon PostgreSQL extension.
+### Unified Deployment (Vercel)
+The entire stack is deployed through Vercel:
+- **Frontend**: Built from `artifacts/resume-site` and published as a static SPA.
+- **API**: Served by the root `api/[...path].ts` function, which routes all `/api/*` requests into the existing Express app.
+- **Database**: Uses the PostgreSQL connection supplied via `DATABASE_URL`.
 
 #### Build Command
 ```bash
-npx pnpm install && npx pnpm run build
+pnpm run build
 ```
 
-#### Environment Variables
-The following variables must be configured in the Netlify UI:
-- `GOOGLE_CLIENT_ID`: Your Google OAuth 2.0 Client ID.
-- `GOOGLE_CLIENT_SECRET`: Your Google OAuth 2.0 Client Secret.
-- `DATABASE_URL`: Automatically provided by the Netlify Neon extension after initialization.
+#### Local Vercel Setup
+Link the repository from the terminal with the Vercel CLI:
+```bash
+vercel link --yes --project catuc-research-platform-bamenda --scope onelrians-projects
+```
+
+#### Production Environment Variables
+Set these on the Vercel project before production deploys:
+- `ADMIN_EMAILS`: Comma-separated list of administrator email addresses.
+- `DATABASE_URL`: PostgreSQL connection string.
+- `GOOGLE_CLIENT_ID`: Google OAuth 2.0 Client ID.
+- `GOOGLE_CLIENT_SECRET`: Google OAuth 2.0 Client Secret.
+
+Example CLI commands:
+```bash
+vercel env add ADMIN_EMAILS production --value "admin@example.com" --yes
+vercel env add DATABASE_URL production --sensitive --value "postgresql://..." --yes
+vercel env add GOOGLE_CLIENT_ID production --sensitive --value "..." --yes
+vercel env add GOOGLE_CLIENT_SECRET production --sensitive --value "..." --yes
+```
 
 ### Google Cloud Project Configuration
-To enable authentication, configure your Google Cloud Project with these URIs:
-- **Authorized JavaScript Origins**: `https://<your-site-name>.netlify.app`
-- **Authorized Redirect URIs**: `https://<your-site-name>.netlify.app/api/callback`
+To enable authentication, configure your Google Cloud OAuth client with these URIs:
+- **Authorized JavaScript Origin**: `https://<your-vercel-domain>`
+- **Authorized Redirect URI**: `https://<your-vercel-domain>/api/callback`
 
 ## Security and Data Integrity
 
@@ -54,7 +69,7 @@ All survey responses are linked to verified participant identities. The system i
 
 ## Administrative Access
 
-Access to the researcher dashboard is restricted based on identity claims provided during the Google OAuth flow. Only accounts designated as administrative (e.g., "Ashley") are permitted to view results or modify research instruments.
+Access to the researcher dashboard is restricted based on identity claims provided during the Google OAuth flow. Only accounts designated as administrative in `ADMIN_EMAILS` are permitted to view results or modify research instruments.
 
 ---
 © 2026 The Catholic University of Cameroon, Bamenda. Department of Business and Management Sciences.

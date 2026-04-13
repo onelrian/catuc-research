@@ -7,11 +7,9 @@ const artifactDir = path.dirname(fileURLToPath(import.meta.url));
 
 async function buildAll() {
   const distDir = path.resolve(artifactDir, "dist");
-  const netlifyDistDir = path.resolve(artifactDir, "dist-netlify");
   await rm(distDir, { recursive: true, force: true });
-  await rm(netlifyDistDir, { recursive: true, force: true });
 
-  // 1. Build Standard App
+  // Build the standalone Node bundle used for local execution and internal tooling.
   await esbuild({
     entryPoints: [path.resolve(artifactDir, "src/index.ts")],
     platform: "node",
@@ -22,34 +20,6 @@ async function buildAll() {
     logLevel: "info",
     external: EXTERNAL_PACKAGES,
     sourcemap: "linked",
-    banner: {
-      js: BANNER,
-    },
-  });
-
-  // 2. Build Standalone Netlify Function
-  console.log("📦 Bundling standalone Netlify Function...");
-  const siteFunctionsDir = path.resolve(artifactDir, "../resume-site/dist-functions");
-  await rm(siteFunctionsDir, { recursive: true, force: true });
-
-  await esbuild({
-    entryPoints: {
-      api: path.resolve(artifactDir, "../resume-site/netlify/functions/api.mts")
-    },
-    platform: "node",
-    bundle: true,
-    format: "esm",
-    outdir: siteFunctionsDir,
-    outExtension: { ".js": ".mjs" },
-    logLevel: "info",
-    // In standalone mode, we bundle EVERYTHING except Node.js built-ins.
-    // This solves the "Cannot find package" issue.
-    external: ["node:*"],
-    sourcemap: "linked",
-    plugins: [
-      // We removed esbuildPluginPino() here. 
-      // Serverless functions should log directly to stdout without worker-based transports.
-    ],
     banner: {
       js: BANNER,
     },

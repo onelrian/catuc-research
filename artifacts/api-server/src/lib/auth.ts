@@ -12,7 +12,7 @@ export const SESSION_TTL = 7 * 24 * 60 * 60 * 1000;
 
 export function checkIsAdmin(email: string | null | undefined): boolean {
   if (!email) return false;
-  const adminEmails = (process.env.ADMIN_EMAILS || "").toLowerCase().split(",").map(e => e.trim());
+  const adminEmails = (process.env.ADMIN_EMAILS || "").toLowerCase().split(",").map((e) => e.trim());
   return adminEmails.includes(email.toLowerCase());
 }
 

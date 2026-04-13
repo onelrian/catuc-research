@@ -1,4 +1,4 @@
-name: Deploy to Netlify
+name: Deploy to Vercel
 
 on:
   push:
@@ -8,11 +8,8 @@ on:
     branches:
       - main
 
-# Required for Netlify action to update commit status and comments
 permissions:
-  contents: write
-  statuses: write
-  deployments: write
+  contents: read
 
 jobs:
   build-and-deploy:
@@ -38,27 +35,23 @@ jobs:
         run: pnpm run build
 
       - name: Database Push
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           npx pnpm --filter @workspace/db run push
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
       - name: Database Seed
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
-          # Use tsx to run the standalone seeding script
           pnpm dlx tsx artifacts/api-server/src/seed.ts
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          # We don't need AUTO_SEED=true here as we are calling the script directly
 
-
-      - name: Deploy to Netlify
+      - name: Deploy to Vercel
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
-          if [ "${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}" = "true" ]; then
-            npx netlify-cli deploy --site ${{ secrets.NETLIFY_SITE_ID }} --auth ${{ secrets.NETLIFY_AUTH_TOKEN }} --filter @workspace/resume-site --dir=artifacts/resume-site/dist/public --functions=artifacts/resume-site/dist-functions --prod
-          else
-            npx netlify-cli deploy --site ${{ secrets.NETLIFY_SITE_ID }} --auth ${{ secrets.NETLIFY_AUTH_TOKEN }} --filter @workspace/resume-site --dir=artifacts/resume-site/dist/public --functions=artifacts/resume-site/dist-functions
-          fi
+          npx vercel link --yes --project catuc-research-platform-bamenda --scope onelrians-projects --token "${{ secrets.VERCEL_TOKEN }}"
+          npx vercel deploy --prod --yes --token "${{ secrets.VERCEL_TOKEN }}"
         env:
-          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}

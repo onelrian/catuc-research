@@ -10,18 +10,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@workspace/api-server": "workspace:*",
-    "serverless-http": "^3.2.0",
-    "express": "^5.0.0",
-    "cors": "^2.8.5",
-    "pino": "^9.0.0",
-    "pino-http": "^10.0.0",
-    "openid-client": "^6.8.2",
-    "cookie-parser": "^1.4.7",
-    "drizzle-orm": "catalog:",
-    "@workspace/db": "workspace:*",
-    "@workspace/api-zod": "workspace:*",
-    "@neondatabase/serverless": "^0.10.4"
+    "@workspace/api-client-react": "workspace:*",
+    "@workspace/auth-web": "workspace:*"
   },
   "devDependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -59,8 +49,6 @@
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "catalog:",
-    "@workspace/api-client-react": "workspace:*",
-    "@workspace/auth-web": "workspace:*",
     "class-variance-authority": "catalog:",
     "clsx": "catalog:",
     "date-fns": "^3.6.0",
