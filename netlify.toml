@@ -7,9 +7,8 @@
   NODE_VERSION = "20"
 
 [functions]
-  directory = "artifacts/resume-site/netlify/functions"
-  node_bundler = "esbuild"
-  external_node_modules = []
+  directory = "artifacts/api-server/dist-netlify"
+  node_bundler = "none"
 
 # 1. (Handled by Netlify V2 Function natively)
 # [[redirects]]
@@ -21,5 +20,5 @@
 # 2. SPA routing: Ensures React Router works on page refreshes
 [[redirects]]
   from = "/*"
-  to = "/artifacts/resume-site/dist/public/index.html"
+  to = "/index.html"
   status = 200

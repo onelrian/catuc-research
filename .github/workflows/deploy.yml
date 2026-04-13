@@ -39,8 +39,10 @@ jobs:
           # Build library dependencies first as required by README
           pnpm run --filter @workspace/api-zod --if-present build
           pnpm run --filter @workspace/api-client-react --if-present build
-          # Then build the main site
+          # Build the main site
           pnpm run --filter @workspace/resume-site build
+          # Build the standalone Netlify Function (Bakes in all dependencies)
+          pnpm run --filter @workspace/api-server build:netlify
 
       - name: Database Push
         run: |
@@ -60,9 +62,9 @@ jobs:
       - name: Deploy to Netlify
         run: |
           if [ "${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}" = "true" ]; then
-            npx netlify-cli deploy --filter @workspace/resume-site --dir=artifacts/resume-site/dist/public --functions=artifacts/resume-site/netlify/functions --prod
+            npx netlify-cli deploy --dir=artifacts/resume-site/dist/public --functions=artifacts/api-server/dist-netlify --prod
           else
-            npx netlify-cli deploy --filter @workspace/resume-site --dir=artifacts/resume-site/dist/public --functions=artifacts/resume-site/netlify/functions
+            npx netlify-cli deploy --dir=artifacts/resume-site/dist/public --functions=artifacts/api-server/dist-netlify
           fi
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
