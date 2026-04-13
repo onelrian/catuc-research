@@ -47,16 +47,12 @@ jobs:
 
 
       - name: Deploy to Netlify
-        uses: nwtgck/actions-netlify@v3.0
-        with:
-          publish-dir: artifacts/resume-site/dist/public
-          functions-dir: artifacts/resume-site/netlify/functions
-          production-deploy: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          # Disable verbose comments to keep the log clean
-          enable-commit-comment: false
-          enable-pull-request-comment: false
-          enable-commit-status: true
+        run: |
+          if [ "${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}" = "true" ]; then
+            npx netlify-cli deploy --dir=artifacts/resume-site/dist/public --functions=artifacts/resume-site/netlify/functions --prod
+          else
+            npx netlify-cli deploy --dir=artifacts/resume-site/dist/public --functions=artifacts/resume-site/netlify/functions
+          fi
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
