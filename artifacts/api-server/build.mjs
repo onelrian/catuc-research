@@ -55,8 +55,8 @@ async function buildAll() {
     external: ["node:*"],
     sourcemap: "linked",
     plugins: [
-      // We exclude pino-pretty from the function bundle as well.
-      esbuildPluginPino()
+      // We removed esbuildPluginPino() here. 
+      // Serverless functions should log directly to stdout without worker-based transports.
     ],
     banner: {
       js: BANNER,

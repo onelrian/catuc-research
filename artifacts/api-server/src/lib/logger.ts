@@ -9,7 +9,7 @@ export const logger = pino({
     "req.headers.cookie",
     "res.headers['set-cookie']",
   ],
-  ...(isProduction || process.env.NETLIFY
+  ...(isProduction || process.env.NETLIFY || process.env.FUNCTIONS_EMULATOR
     ? {}
     : {
         transport: {
