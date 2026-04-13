@@ -24,11 +24,29 @@ The platform is designed to provide a professional and secure environment for co
 
 ## Deployment Specifications
 
-### Frontend Deployment (Netlify)
-The frontend is configured for deployment as a static site. The included `netlify.toml` file manages the build process and handles Single Page Application (SPA) routing. It also includes proxy configuration for API requests to avoid cross-origin issues.
+The platform is optimized for deployment on **Netlify** using a monorepo structure.
 
-### Backend Deployment
-The API server requires a Node.js environment and a persistent PostgreSQL database. It should be deployed to a service that supports long-running processes (e.g., Railway, Fly.io, or an AWS EC2 instance).
+### Unified Deployment (Netlify)
+The entire stack (Frontend + API) is deployed to Netlify:
+- **Frontend**: Deployed as a static SPA.
+- **API**: Deployed as a Netlify Function using `serverless-http` to wrap the Express app.
+- **Database**: Integrated via Netlify's Neon PostgreSQL extension.
+
+#### Build Command
+```bash
+npx pnpm install && npx pnpm run --filter @workspace/api-zod build && npx pnpm run --filter @workspace/api-client-react build && npx pnpm run --filter @workspace/resume-site build
+```
+
+#### Environment Variables
+The following variables must be configured in the Netlify UI:
+- `GOOGLE_CLIENT_ID`: Your Google OAuth 2.0 Client ID.
+- `GOOGLE_CLIENT_SECRET`: Your Google OAuth 2.0 Client Secret.
+- `DATABASE_URL`: Automatically provided by the Netlify Neon extension after initialization.
+
+### Google Cloud Project Configuration
+To enable authentication, configure your Google Cloud Project with these URIs:
+- **Authorized JavaScript Origins**: `https://<your-site-name>.netlify.app`
+- **Authorized Redirect URIs**: `https://<your-site-name>.netlify.app/api/callback`
 
 ## Security and Data Integrity
 
