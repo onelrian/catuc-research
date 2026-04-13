@@ -1,6 +1,7 @@
 [build]
   base = "artifacts/resume-site"
-  command = "cd ../.. && npx pnpm install && npx pnpm run --filter @workspace/api-zod build && npx pnpm run --filter @workspace/api-client-react build && PORT=5173 BASE_PATH=/ npx pnpm run --filter @workspace/resume-site build"
+  # Build process: install all workspace deps, build generated types/clients, then build frontend
+  command = "cd ../.. && npx pnpm install && npx pnpm run --filter @workspace/api-zod build && npx pnpm run --filter @workspace/api-client-react build && npx pnpm run --filter @workspace/resume-site build"
   publish = "artifacts/resume-site/dist/public"
 
 [build.environment]
@@ -8,8 +9,17 @@
   PORT = "5173"
   BASE_PATH = "/"
 
-# SPA routing — all paths serve index.html
+# 1. API Proxy: Redirects frontend calls to the backend server
+# Replace the 'to' URL below with your actual API server URL (e.g., Replit or Railway)
+[[redirects]]
+  from = "/api/*"
+  to = "https://your-deployed-api.example.com/api/:splat"
+  status = 200
+  force = true
+
+# 2. SPA routing: Ensures React Router works on page refreshes
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
+
