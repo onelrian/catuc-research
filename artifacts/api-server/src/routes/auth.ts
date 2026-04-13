@@ -85,6 +85,11 @@ async function upsertUser(claims: Record<string, unknown>) {
 }
 
 router.get("/auth/user", (req: Request, res: Response) => {
+  req.log.info(
+    { authenticated: req.isAuthenticated(), userId: req.user?.id ?? null },
+    "Auth user lookup",
+  );
+
   res.json(
     GetCurrentAuthUserResponse.parse({
       user: req.isAuthenticated() ? req.user : null,
@@ -187,6 +192,10 @@ router.get("/callback", async (req: Request, res: Response) => {
 
   const sid = await createSession(sessionData);
   setSessionCookie(res, sid);
+  req.log.info(
+    { userId: dbUser.id, email: dbUser.email, sessionId: sid.slice(0, 8) },
+    "Auth callback completed",
+  );
   res.redirect(returnTo);
 });
 

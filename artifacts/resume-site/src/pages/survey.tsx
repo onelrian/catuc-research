@@ -39,6 +39,23 @@ export default function SurveyPage() {
   const { toast } = useToast();
   const { user, isAuthenticated, isLoading: isAuthLoading, login } = useAuth();
 
+  const { data: survey, isLoading, error } = useGetSurvey(id, {
+    query: {
+      enabled: !!id && !isNaN(id),
+      queryKey: getGetSurveyQueryKey(id),
+    }
+  });
+
+  const { mutate: submitResponse, isPending: isSubmitting } = useSubmitResponse();
+
+  const [answers, setAnswers] = useState<Record<number, any>>({});
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [currentSectionIndex]);
+
   if (isAuthLoading) {
     return (
       <Layout>
@@ -64,23 +81,6 @@ export default function SurveyPage() {
       </Layout>
     );
   }
-
-  const { data: survey, isLoading, error } = useGetSurvey(id, {
-    query: {
-      enabled: !!id && !isNaN(id),
-      queryKey: getGetSurveyQueryKey(id),
-    }
-  });
-
-  const { mutate: submitResponse, isPending: isSubmitting } = useSubmitResponse();
-
-  const [answers, setAnswers] = useState<Record<number, any>>({});
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
-
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [currentSectionIndex]);
 
   const sections = useMemo(() => {
     if (!survey?.questions) return [];
