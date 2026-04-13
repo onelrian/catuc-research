@@ -1,0 +1,48 @@
+name: Deploy to Netlify
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Install Dependencies
+        run: pnpm install
+
+      - name: Build Project
+        run: |
+          # Build shared workspace libraries first
+          npx pnpm --filter @workspace/api-zod build
+          npx pnpm --filter @workspace/api-client-react build
+          
+          # Build the main site
+          npx pnpm --filter @workspace/resume-site build
+
+      - name: Deploy to Netlify
+        uses: ntl/netlify-action@v1
+        with:
+          publish-dir: ./artifacts/resume-site/dist/public
+          production-deploy: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          netlify-auth-token: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          site-id: ${{ secrets.NETLIFY_SITE_ID }}
+          build-finished-event: true
