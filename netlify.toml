@@ -1,6 +1,6 @@
 [build]
   base = ""
-  command = "pnpm run --filter @workspace/resume-site build"
+  command = "pnpm run build"
   publish = "artifacts/resume-site/dist/public"
 
 [build.environment]

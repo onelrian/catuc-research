@@ -35,15 +35,7 @@ jobs:
         run: pnpm install --no-frozen-lockfile
 
       - name: Build Project
-        run: |
-          # Build library dependencies first as required by README
-          pnpm run --filter @workspace/api-zod --if-present build
-          pnpm run --filter @workspace/api-client-react --if-present build
-          # Build the main site
-          pnpm run --filter @workspace/resume-site build
-          # Build the standalone Netlify Function (Bakes in all dependencies)
-          export NODE_ENV=production
-          pnpm run --filter @workspace/api-server build:netlify
+        run: pnpm run build
 
       - name: Database Push
         run: |
@@ -70,4 +62,3 @@ jobs:
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-

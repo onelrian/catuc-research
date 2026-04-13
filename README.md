@@ -34,7 +34,7 @@ The entire stack (Frontend + API) is deployed to Netlify:
 
 #### Build Command
 ```bash
-npx pnpm install && npx pnpm run --filter @workspace/api-zod build && npx pnpm run --filter @workspace/api-client-react build && npx pnpm run --filter @workspace/resume-site build
+npx pnpm install && npx pnpm run build
 ```
 
 #### Environment Variables
