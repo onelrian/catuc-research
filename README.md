@@ -57,13 +57,15 @@ vercel env add ADMIN_EMAILS production --value "admin@example.com" --yes
 vercel env add DATABASE_URL production --sensitive --value "postgresql://..." --yes
 vercel env add GOOGLE_CLIENT_ID production --sensitive --value "..." --yes
 vercel env add GOOGLE_CLIENT_SECRET production --sensitive --value "..." --yes
-vercel env add APP_ORIGIN production --value "https://catuc-research-platform-bamenda-o3lmslmyx-onelrians-projects.vercel.app" --yes
+vercel env add APP_ORIGIN production --value "https://catuc-research-platform-bamenda.vercel.app" --yes
 ```
 
 ### Google Cloud Project Configuration
 To enable authentication, configure your Google Cloud OAuth client with these URIs:
-- **Authorized JavaScript Origin**: `https://<your-vercel-domain>`
-- **Authorized Redirect URI**: `https://<your-vercel-domain>/api/callback`
+- **Authorized JavaScript Origin**: `https://catuc-research-platform-bamenda.vercel.app`
+- **Authorized Redirect URI**: `https://catuc-research-platform-bamenda.vercel.app/api/callback`
+
+If you prefer the team-scoped alias, use that same origin everywhere. Do not use a deployment-specific URL like `https://catuc-research-platform-bamenda-<hash>-onelrians-projects.vercel.app`.
 
 ## Security and Data Integrity
 
