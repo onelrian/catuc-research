@@ -28,17 +28,30 @@ jobs:
       - name: Install Dependencies
         run: pnpm install --no-frozen-lockfile
 
+      - name: Verify Secrets
+        run: |
+          if [ -z "${{ secrets.NETLIFY_AUTH_TOKEN }}" ]; then echo "Error: NETLIFY_AUTH_TOKEN is not set"; exit 1; fi
+          if [ -z "${{ secrets.NETLIFY_SITE_ID }}" ]; then echo "Error: NETLIFY_SITE_ID is not set"; exit 1; fi
+
       - name: Build Project
         run: |
           pnpm --filter @workspace/api-zod build
           pnpm --filter @workspace/api-client-react build
           pnpm --filter @workspace/resume-site build
 
+      - name: Verify Build Output
+        run: |
+          echo "Checking build directory..."
+          ls -R artifacts/resume-site/dist/public
+
       - name: Deploy to Netlify
         uses: nwtgck/actions-netlify@v3.0
         with:
-          publish-dir: ./artifacts/resume-site/dist/public
+          publish-dir: artifacts/resume-site/dist/public
           production-deploy: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           netlify-auth-token: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           netlify-site-id: ${{ secrets.NETLIFY_SITE_ID }}
+          enable-commit-comment: true
+          overwritable-pull-request-deploy-message: true
+
