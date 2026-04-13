@@ -1,5 +1,5 @@
 [build]
-  command = "npm install -g pnpm && pnpm install && pnpm run --filter @workspace/api-zod build && pnpm run --filter @workspace/api-client-react build && pnpm run --filter @workspace/resume-site build"
+  command = "npm install -g pnpm && pnpm install --no-frozen-lockfile && pnpm run --filter @workspace/api-zod build && pnpm run --filter @workspace/api-client-react build && pnpm run --filter @workspace/resume-site build"
   publish = "artifacts/resume-site/dist/public"
 
 [build.environment]
