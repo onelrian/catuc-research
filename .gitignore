@@ -48,8 +48,15 @@ Thumbs.db
 .cache/
 .local/
 .env
+.env.*
 *.zip
 pnpm-lock.yaml
 questionnaire.docx
 attached_assets/
 .vercel
+
+# Local cloud credentials and generated AWS artifacts
+.aws/
+.aws-sam/
+.amplify/
+aws-exports.*
