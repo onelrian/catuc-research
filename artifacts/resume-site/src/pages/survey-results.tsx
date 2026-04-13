@@ -291,7 +291,7 @@ export default function SurveyResultsPage() {
                                       </ResponsiveContainer>
                                     </div>
                                     <div className="flex-1 w-full space-y-3">
-                                      {Object.entries(qr.choiceCounts).sort((a,b)=>b[1]-a[1]).map(([key, val], idx) => {
+                                    {Object.entries(qr.choiceCounts as Record<string, number>).sort((a: [string, number], b: [string, number]) => b[1] - a[1]).map(([key, val]: [string, number], idx: number) => {
                                         const percent = Math.round((val / qr.totalAnswers) * 100);
                                         const color = isYesNo ? (key==="Yes" ? YES_NO_COLORS[0] : YES_NO_COLORS[1]) : DEMO_COLORS[idx % DEMO_COLORS.length];
                                         return (
@@ -309,13 +309,13 @@ export default function SurveyResultsPage() {
                                     </div>
                                   </div>
                                 )}
-
+ 
                                 {qr.questionType === 'text' && qr.textAnswers && (
                                   <div className="space-y-4 max-h-[350px] overflow-y-auto pr-4 scrollbar-thin scrollbar-thumb-border">
                                     {qr.textAnswers.length === 0 ? (
                                       <div className="text-muted-foreground text-sm italic p-4 bg-muted/20 rounded-lg text-center">No qualitative data provided.</div>
                                     ) : (
-                                      qr.textAnswers.map((ans, i) => (
+                                      qr.textAnswers.map((ans: string, i: number) => (
                                         <div key={i} className="p-4 bg-muted/20 border border-border/40 rounded-xl text-sm text-foreground leading-relaxed">
                                           "{ans}"
                                         </div>

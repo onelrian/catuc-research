@@ -1,5 +1,5 @@
 import { pgTable, text, serial, timestamp, jsonb, boolean, integer, varchar } from "drizzle-orm/pg-core";
-import { z } from "zod/v4";
+import { z } from "zod";
 import { usersTable } from "./auth";
 
 export const surveysTable = pgTable("surveys", {

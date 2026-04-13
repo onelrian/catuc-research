@@ -36,8 +36,11 @@ jobs:
 
       - name: Build Project
         run: |
-          # Only the resume-site has a build script
-          npx pnpm --filter @workspace/resume-site build
+          # Build library dependencies first as required by README
+          pnpm run --filter @workspace/api-zod --if-present build
+          pnpm run --filter @workspace/api-client-react --if-present build
+          # Then build the main site
+          pnpm run --filter @workspace/resume-site build
 
       - name: Database Push
         run: |

@@ -6,7 +6,8 @@
     "jsx": "react-jsx",
     "lib": ["esnext", "dom", "dom.iterable"],
     "composite": true,
-    "declaration": true
+    "declaration": true,
+    "types": ["vite/client"]
   },
   "include": ["src"]
 }
