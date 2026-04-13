@@ -49,9 +49,9 @@ jobs:
       - name: Deploy to Netlify
         run: |
           if [ "${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}" = "true" ]; then
-            npx netlify-cli deploy --dir=artifacts/resume-site/dist/public --functions=artifacts/resume-site/netlify/functions --prod
+            npx netlify-cli deploy --filter @workspace/resume-site --dir=artifacts/resume-site/dist/public --functions=artifacts/resume-site/netlify/functions --prod
           else
-            npx netlify-cli deploy --dir=artifacts/resume-site/dist/public --functions=artifacts/resume-site/netlify/functions
+            npx netlify-cli deploy --filter @workspace/resume-site --dir=artifacts/resume-site/dist/public --functions=artifacts/resume-site/netlify/functions
           fi
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
