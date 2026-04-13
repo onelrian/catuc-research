@@ -212,7 +212,15 @@ router.post("/surveys/:surveyId/responses", async (req, res) => {
     const parsed = submitResponseSchema.safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ error: "Invalid request body" });
 
-    const [response] = await db.insert(responsesTable).values({ surveyId, userId }).returning();
+    let response;
+    try {
+      [response] = await db.insert(responsesTable).values({ surveyId, userId }).returning();
+    } catch (err) {
+      if ((err as { code?: string }).code === "23505") {
+        return res.status(400).json({ error: "You have already participated in this study" });
+      }
+      throw err;
+    }
 
     if (parsed.data.answers.length > 0) {
       await db.insert(answersTable).values(
@@ -439,4 +447,3 @@ router.get("/dashboard/overview", adminOnly, async (req, res) => {
 });
 
 export default router;
-

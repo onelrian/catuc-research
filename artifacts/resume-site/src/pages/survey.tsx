@@ -57,7 +57,7 @@ export default function SurveyPage() {
           <p className="text-lg text-muted-foreground mb-10 max-w-sm mx-auto leading-relaxed">
             Please log in to participate. This ensures data integrity and helps us prevent duplicate submissions.
           </p>
-          <Button size="lg" onClick={login} className="px-10 py-6 text-lg rounded-full shadow-lg hover:shadow-primary/20 transition-all font-semibold">
+          <Button size="lg" onClick={() => login()} className="px-10 py-6 text-lg rounded-full shadow-lg hover:shadow-primary/20 transition-all font-semibold">
             Log In to Begin
           </Button>
         </div>

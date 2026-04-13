@@ -7,7 +7,6 @@ import { LogIn, LogOut, LayoutDashboard, Database } from "lucide-react";
 export function Layout({ children }: { children: React.ReactNode }) {
   const { user, isAuthenticated, login, logout, isLoading } = useAuth();
 
-
   return (
     <div className="min-h-[100dvh] flex flex-col bg-background text-foreground transition-colors duration-200">
       <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60">
@@ -52,13 +51,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     <span className="text-xs font-semibold leading-none">{user?.firstName} {user?.lastName}</span>
                     <span className="text-[10px] text-muted-foreground leading-none mt-1">{user?.email}</span>
                   </div>
-                  <Button variant="ghost" size="sm" onClick={logout} className="gap-2 text-muted-foreground hover:text-destructive">
+                  <Button variant="ghost" size="sm" onClick={() => logout()} className="gap-2 text-muted-foreground hover:text-destructive">
                     <LogOut className="w-4 h-4" />
                     <span className="hidden sm:inline">Logout</span>
                   </Button>
                 </div>
               ) : (
-                <Button variant="default" size="sm" onClick={login} className="gap-2">
+                <Button variant="default" size="sm" onClick={() => login()} className="gap-2">
                   <LogIn className="w-4 h-4" />
                   <span>Login</span>
                 </Button>
@@ -83,4 +82,3 @@ export function Layout({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
-

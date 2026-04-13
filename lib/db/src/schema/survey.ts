@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, jsonb, boolean, integer, varchar } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, jsonb, boolean, integer, varchar, uniqueIndex } from "drizzle-orm/pg-core";
 import { z } from "zod";
 import { usersTable } from "./auth";
 
@@ -29,9 +29,11 @@ export const questionsTable = pgTable("questions", {
 export const responsesTable = pgTable("responses", {
   id: serial("id").primaryKey(),
   surveyId: integer("survey_id").notNull().references(() => surveysTable.id, { onDelete: "cascade" }),
-  userId: varchar("user_id").references(() => usersTable.id),
+  userId: varchar("user_id").notNull().references(() => usersTable.id),
   submittedAt: timestamp("submitted_at").notNull().defaultNow(),
-});
+}, (table) => ({
+  surveyUserUnique: uniqueIndex("responses_survey_user_unique").on(table.surveyId, table.userId),
+}));
 
 export const answersTable = pgTable("answers", {
   id: serial("id").primaryKey(),
