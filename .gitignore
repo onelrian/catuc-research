@@ -50,3 +50,4 @@ Thumbs.db
 .netlify/
 .env
 *.zip
+pnpm-lock.yaml

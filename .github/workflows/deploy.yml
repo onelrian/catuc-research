@@ -26,23 +26,19 @@ jobs:
           version: 9
 
       - name: Install Dependencies
-        run: pnpm install
+        run: pnpm install --no-frozen-lockfile
 
       - name: Build Project
         run: |
-          # Build shared workspace libraries first
-          npx pnpm --filter @workspace/api-zod build
-          npx pnpm --filter @workspace/api-client-react build
-          
-          # Build the main site
-          npx pnpm --filter @workspace/resume-site build
+          pnpm --filter @workspace/api-zod build
+          pnpm --filter @workspace/api-client-react build
+          pnpm --filter @workspace/resume-site build
 
       - name: Deploy to Netlify
-        uses: ntl/netlify-action@v1
+        uses: nwtgck/actions-netlify@v3.0
         with:
           publish-dir: ./artifacts/resume-site/dist/public
           production-deploy: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           netlify-auth-token: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          site-id: ${{ secrets.NETLIFY_SITE_ID }}
-          build-finished-event: true
+          netlify-site-id: ${{ secrets.NETLIFY_SITE_ID }}
