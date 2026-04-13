@@ -7,7 +7,7 @@
   NODE_VERSION = "20"
 
 [functions]
-  directory = "artifacts/api-server/dist-netlify"
+  directory = "artifacts/resume-site/dist-functions"
   node_bundler = "none"
 
 # 1. (Handled by Netlify V2 Function natively)

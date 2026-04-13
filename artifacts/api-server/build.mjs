@@ -37,12 +37,17 @@ async function buildAll() {
 
   // 2. Build Standalone Netlify Function
   console.log("📦 Bundling standalone Netlify Function...");
+  const siteFunctionsDir = path.resolve(artifactDir, "../resume-site/dist-functions");
+  await rm(siteFunctionsDir, { recursive: true, force: true });
+
   await esbuild({
-    entryPoints: [path.resolve(artifactDir, "../resume-site/netlify/functions/api.mts")],
+    entryPoints: {
+      api: path.resolve(artifactDir, "../resume-site/netlify/functions/api.mts")
+    },
     platform: "node",
     bundle: true,
     format: "esm",
-    outdir: netlifyDistDir,
+    outdir: siteFunctionsDir,
     outExtension: { ".js": ".mjs" },
     logLevel: "info",
     // In standalone mode, we bundle EVERYTHING except Node.js built-ins.
