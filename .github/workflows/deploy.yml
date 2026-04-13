@@ -48,6 +48,14 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
+      - name: Database Seed
+        run: |
+          # Use tsx to run the standalone seeding script
+          pnpm dlx tsx artifacts/api-server/src/seed.ts
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          # We don't need AUTO_SEED=true here as we are calling the script directly
+
 
       - name: Deploy to Netlify
         run: |
