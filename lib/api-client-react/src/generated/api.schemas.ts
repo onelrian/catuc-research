@@ -9,74 +9,147 @@ export interface HealthStatus {
   status: string;
 }
 
-export interface Experience {
-  company: string;
-  role: string;
-  startDate: string;
-  endDate?: string;
-  description: string;
-  bullets: string[];
+export interface ErrorResponse {
+  error: string;
 }
 
-export interface Education {
-  institution: string;
-  degree: string;
-  field: string;
-  startYear: number;
-  endYear?: number;
-  gpa?: string;
-  honors?: string;
-}
-
-export interface Resume {
+export interface Survey {
   id: number;
-  name: string;
   title: string;
-  email: string;
-  phone?: string;
-  location?: string;
-  summary: string;
-  linkedin?: string;
-  website?: string;
-  skills: string[];
-  experience: Experience[];
-  education: Education[];
-  certifications: string[];
+  description?: string;
+  isActive: boolean;
+  responseCount: number;
   createdAt: string;
   updatedAt: string;
 }
 
-export interface ResumeUpdate {
-  name?: string;
-  title?: string;
-  email?: string;
-  phone?: string;
-  location?: string;
-  summary?: string;
-  linkedin?: string;
-  website?: string;
-  skills?: string[];
-  experience?: Experience[];
-  education?: Education[];
-  certifications?: string[];
-}
+export type QuestionType = (typeof QuestionType)[keyof typeof QuestionType];
 
-export interface View {
+export const QuestionType = {
+  text: "text",
+  multiple_choice: "multiple_choice",
+  rating: "rating",
+  yes_no: "yes_no",
+} as const;
+
+export interface Question {
   id: number;
-  referrer?: string;
-  viewedAt: string;
-  ipHash?: string;
+  surveyId: number;
+  text: string;
+  type: QuestionType;
+  options: string[];
+  isRequired: boolean;
+  orderIndex: number;
 }
 
-export interface RecordViewBody {
-  referrer?: string;
+export interface SurveyWithQuestions {
+  id: number;
+  title: string;
+  description?: string;
+  isActive: boolean;
+  responseCount: number;
+  createdAt: string;
+  updatedAt: string;
+  questions: Question[];
 }
 
-export interface DashboardSummary {
-  totalViews: number;
-  viewsToday: number;
-  viewsThisWeek: number;
-  viewsThisMonth: number;
-  uniqueReferrers: number;
-  lastViewedAt?: string;
+export type CreateQuestionBodyType =
+  (typeof CreateQuestionBodyType)[keyof typeof CreateQuestionBodyType];
+
+export const CreateQuestionBodyType = {
+  text: "text",
+  multiple_choice: "multiple_choice",
+  rating: "rating",
+  yes_no: "yes_no",
+} as const;
+
+export interface CreateQuestionBody {
+  text: string;
+  type: CreateQuestionBodyType;
+  options?: string[];
+  isRequired?: boolean;
+  orderIndex?: number;
+}
+
+export interface CreateSurveyBody {
+  title: string;
+  description?: string;
+  questions: CreateQuestionBody[];
+}
+
+export interface UpdateSurveyBody {
+  title?: string;
+  description?: string;
+  isActive?: boolean;
+  questions?: CreateQuestionBody[];
+}
+
+export interface AnswerInput {
+  questionId: number;
+  value?: string;
+  values?: string[];
+}
+
+export interface SubmitResponseBody {
+  answers: AnswerInput[];
+}
+
+export interface ResponseRecord {
+  id: number;
+  surveyId: number;
+  submittedAt: string;
+}
+
+export interface Answer {
+  id: number;
+  questionId: number;
+  questionText: string;
+  value?: string;
+  values?: string[];
+}
+
+export interface ResponseWithAnswers {
+  id: number;
+  surveyId: number;
+  submittedAt: string;
+  answers: Answer[];
+}
+
+export type QuestionResultChoiceCounts = { [key: string]: number };
+
+export type QuestionResultRatingDistribution = { [key: string]: number };
+
+export interface QuestionResult {
+  questionId: number;
+  questionText: string;
+  questionType: string;
+  totalAnswers: number;
+  textAnswers?: string[];
+  choiceCounts?: QuestionResultChoiceCounts;
+  averageRating?: number;
+  ratingDistribution?: QuestionResultRatingDistribution;
+}
+
+export interface SurveyResults {
+  surveyId: number;
+  surveyTitle: string;
+  totalResponses: number;
+  completionRate: number;
+  questionResults: QuestionResult[];
+  recentResponses: ResponseRecord[];
+}
+
+export interface ActivityItem {
+  surveyId: number;
+  surveyTitle: string;
+  responseCount: number;
+  lastResponseAt?: string;
+}
+
+export interface DashboardOverview {
+  totalSurveys: number;
+  activeSurveys: number;
+  totalResponses: number;
+  responsesToday: number;
+  recentActivity: ActivityItem[];
 }

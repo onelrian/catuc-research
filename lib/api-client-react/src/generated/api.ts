@@ -17,12 +17,17 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
-  DashboardSummary,
+  CreateSurveyBody,
+  DashboardOverview,
+  ErrorResponse,
   HealthStatus,
-  RecordViewBody,
-  Resume,
-  ResumeUpdate,
-  View,
+  ResponseRecord,
+  ResponseWithAnswers,
+  SubmitResponseBody,
+  Survey,
+  SurveyResults,
+  SurveyWithQuestions,
+  UpdateSurveyBody,
 } from "./api.schemas";
 
 import { customFetch } from "../custom-fetch";
@@ -35,7 +40,6 @@ type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 /**
- * Returns server health status
  * @summary Health check
  */
 export const getHealthCheckUrl = () => {
@@ -111,63 +115,70 @@ export function useHealthCheck<
 }
 
 /**
- * Returns the full resume profile
- * @summary Get resume data
+ * @summary List all surveys
  */
-export const getGetResumeUrl = () => {
-  return `/api/resume`;
+export const getListSurveysUrl = () => {
+  return `/api/surveys`;
 };
 
-export const getResume = async (options?: RequestInit): Promise<Resume> => {
-  return customFetch<Resume>(getGetResumeUrl(), {
+export const listSurveys = async (options?: RequestInit): Promise<Survey[]> => {
+  return customFetch<Survey[]>(getListSurveysUrl(), {
     ...options,
     method: "GET",
   });
 };
 
-export const getGetResumeQueryKey = () => {
-  return [`/api/resume`] as const;
+export const getListSurveysQueryKey = () => {
+  return [`/api/surveys`] as const;
 };
 
-export const getGetResumeQueryOptions = <
-  TData = Awaited<ReturnType<typeof getResume>>,
+export const getListSurveysQueryOptions = <
+  TData = Awaited<ReturnType<typeof listSurveys>>,
   TError = ErrorType<unknown>,
 >(options?: {
-  query?: UseQueryOptions<Awaited<ReturnType<typeof getResume>>, TError, TData>;
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listSurveys>>,
+    TError,
+    TData
+  >;
   request?: SecondParameter<typeof customFetch>;
 }) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetResumeQueryKey();
+  const queryKey = queryOptions?.queryKey ?? getListSurveysQueryKey();
 
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getResume>>> = ({
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listSurveys>>> = ({
     signal,
-  }) => getResume({ signal, ...requestOptions });
+  }) => listSurveys({ signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof getResume>>,
+    Awaited<ReturnType<typeof listSurveys>>,
     TError,
     TData
   > & { queryKey: QueryKey };
 };
 
-export type GetResumeQueryResult = NonNullable<
-  Awaited<ReturnType<typeof getResume>>
+export type ListSurveysQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listSurveys>>
 >;
-export type GetResumeQueryError = ErrorType<unknown>;
+export type ListSurveysQueryError = ErrorType<unknown>;
 
 /**
- * @summary Get resume data
+ * @summary List all surveys
  */
 
-export function useGetResume<
-  TData = Awaited<ReturnType<typeof getResume>>,
+export function useListSurveys<
+  TData = Awaited<ReturnType<typeof listSurveys>>,
   TError = ErrorType<unknown>,
 >(options?: {
-  query?: UseQueryOptions<Awaited<ReturnType<typeof getResume>>, TError, TData>;
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listSurveys>>,
+    TError,
+    TData
+  >;
   request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-  const queryOptions = getGetResumeQueryOptions(options);
+  const queryOptions = getListSurveysQueryOptions(options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;
@@ -177,129 +188,42 @@ export function useGetResume<
 }
 
 /**
- * @summary Update resume data
+ * @summary Create a new survey
  */
-export const getUpdateResumeUrl = () => {
-  return `/api/resume`;
+export const getCreateSurveyUrl = () => {
+  return `/api/surveys`;
 };
 
-export const updateResume = async (
-  resumeUpdate: ResumeUpdate,
+export const createSurvey = async (
+  createSurveyBody: CreateSurveyBody,
   options?: RequestInit,
-): Promise<Resume> => {
-  return customFetch<Resume>(getUpdateResumeUrl(), {
-    ...options,
-    method: "PUT",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(resumeUpdate),
-  });
-};
-
-export const getUpdateResumeMutationOptions = <
-  TError = ErrorType<unknown>,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof updateResume>>,
-    TError,
-    { data: BodyType<ResumeUpdate> },
-    TContext
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof updateResume>>,
-  TError,
-  { data: BodyType<ResumeUpdate> },
-  TContext
-> => {
-  const mutationKey = ["updateResume"];
-  const { mutation: mutationOptions, request: requestOptions } = options
-    ? options.mutation &&
-      "mutationKey" in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey }, request: undefined };
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof updateResume>>,
-    { data: BodyType<ResumeUpdate> }
-  > = (props) => {
-    const { data } = props ?? {};
-
-    return updateResume(data, requestOptions);
-  };
-
-  return { mutationFn, ...mutationOptions };
-};
-
-export type UpdateResumeMutationResult = NonNullable<
-  Awaited<ReturnType<typeof updateResume>>
->;
-export type UpdateResumeMutationBody = BodyType<ResumeUpdate>;
-export type UpdateResumeMutationError = ErrorType<unknown>;
-
-/**
- * @summary Update resume data
- */
-export const useUpdateResume = <
-  TError = ErrorType<unknown>,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof updateResume>>,
-    TError,
-    { data: BodyType<ResumeUpdate> },
-    TContext
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}): UseMutationResult<
-  Awaited<ReturnType<typeof updateResume>>,
-  TError,
-  { data: BodyType<ResumeUpdate> },
-  TContext
-> => {
-  return useMutation(getUpdateResumeMutationOptions(options));
-};
-
-/**
- * Logs a new view when someone opens the resume
- * @summary Record a resume view
- */
-export const getRecordViewUrl = () => {
-  return `/api/views`;
-};
-
-export const recordView = async (
-  recordViewBody: RecordViewBody,
-  options?: RequestInit,
-): Promise<View> => {
-  return customFetch<View>(getRecordViewUrl(), {
+): Promise<Survey> => {
+  return customFetch<Survey>(getCreateSurveyUrl(), {
     ...options,
     method: "POST",
     headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(recordViewBody),
+    body: JSON.stringify(createSurveyBody),
   });
 };
 
-export const getRecordViewMutationOptions = <
+export const getCreateSurveyMutationOptions = <
   TError = ErrorType<unknown>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof recordView>>,
+    Awaited<ReturnType<typeof createSurvey>>,
     TError,
-    { data: BodyType<RecordViewBody> },
+    { data: BodyType<CreateSurveyBody> },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationOptions<
-  Awaited<ReturnType<typeof recordView>>,
+  Awaited<ReturnType<typeof createSurvey>>,
   TError,
-  { data: BodyType<RecordViewBody> },
+  { data: BodyType<CreateSurveyBody> },
   TContext
 > => {
-  const mutationKey = ["recordView"];
+  const mutationKey = ["createSurvey"];
   const { mutation: mutationOptions, request: requestOptions } = options
     ? options.mutation &&
       "mutationKey" in options.mutation &&
@@ -309,114 +233,123 @@ export const getRecordViewMutationOptions = <
     : { mutation: { mutationKey }, request: undefined };
 
   const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof recordView>>,
-    { data: BodyType<RecordViewBody> }
+    Awaited<ReturnType<typeof createSurvey>>,
+    { data: BodyType<CreateSurveyBody> }
   > = (props) => {
     const { data } = props ?? {};
 
-    return recordView(data, requestOptions);
+    return createSurvey(data, requestOptions);
   };
 
   return { mutationFn, ...mutationOptions };
 };
 
-export type RecordViewMutationResult = NonNullable<
-  Awaited<ReturnType<typeof recordView>>
+export type CreateSurveyMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createSurvey>>
 >;
-export type RecordViewMutationBody = BodyType<RecordViewBody>;
-export type RecordViewMutationError = ErrorType<unknown>;
+export type CreateSurveyMutationBody = BodyType<CreateSurveyBody>;
+export type CreateSurveyMutationError = ErrorType<unknown>;
 
 /**
- * @summary Record a resume view
+ * @summary Create a new survey
  */
-export const useRecordView = <
+export const useCreateSurvey = <
   TError = ErrorType<unknown>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof recordView>>,
+    Awaited<ReturnType<typeof createSurvey>>,
     TError,
-    { data: BodyType<RecordViewBody> },
+    { data: BodyType<CreateSurveyBody> },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationResult<
-  Awaited<ReturnType<typeof recordView>>,
+  Awaited<ReturnType<typeof createSurvey>>,
   TError,
-  { data: BodyType<RecordViewBody> },
+  { data: BodyType<CreateSurveyBody> },
   TContext
 > => {
-  return useMutation(getRecordViewMutationOptions(options));
+  return useMutation(getCreateSurveyMutationOptions(options));
 };
 
 /**
- * Returns aggregated view statistics and overview metrics
- * @summary Get dashboard summary
+ * @summary Get a survey with its questions
  */
-export const getGetDashboardSummaryUrl = () => {
-  return `/api/dashboard/summary`;
+export const getGetSurveyUrl = (surveyId: number) => {
+  return `/api/surveys/${surveyId}`;
 };
 
-export const getDashboardSummary = async (
+export const getSurvey = async (
+  surveyId: number,
   options?: RequestInit,
-): Promise<DashboardSummary> => {
-  return customFetch<DashboardSummary>(getGetDashboardSummaryUrl(), {
+): Promise<SurveyWithQuestions> => {
+  return customFetch<SurveyWithQuestions>(getGetSurveyUrl(surveyId), {
     ...options,
     method: "GET",
   });
 };
 
-export const getGetDashboardSummaryQueryKey = () => {
-  return [`/api/dashboard/summary`] as const;
+export const getGetSurveyQueryKey = (surveyId: number) => {
+  return [`/api/surveys/${surveyId}`] as const;
 };
 
-export const getGetDashboardSummaryQueryOptions = <
-  TData = Awaited<ReturnType<typeof getDashboardSummary>>,
-  TError = ErrorType<unknown>,
->(options?: {
-  query?: UseQueryOptions<
-    Awaited<ReturnType<typeof getDashboardSummary>>,
-    TError,
-    TData
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}) => {
+export const getGetSurveyQueryOptions = <
+  TData = Awaited<ReturnType<typeof getSurvey>>,
+  TError = ErrorType<ErrorResponse>,
+>(
+  surveyId: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getSurvey>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetDashboardSummaryQueryKey();
+  const queryKey = queryOptions?.queryKey ?? getGetSurveyQueryKey(surveyId);
 
-  const queryFn: QueryFunction<
-    Awaited<ReturnType<typeof getDashboardSummary>>
-  > = ({ signal }) => getDashboardSummary({ signal, ...requestOptions });
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getSurvey>>> = ({
+    signal,
+  }) => getSurvey(surveyId, { signal, ...requestOptions });
 
-  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof getDashboardSummary>>,
-    TError,
-    TData
-  > & { queryKey: QueryKey };
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!surveyId,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getSurvey>>, TError, TData> & {
+    queryKey: QueryKey;
+  };
 };
 
-export type GetDashboardSummaryQueryResult = NonNullable<
-  Awaited<ReturnType<typeof getDashboardSummary>>
+export type GetSurveyQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getSurvey>>
 >;
-export type GetDashboardSummaryQueryError = ErrorType<unknown>;
+export type GetSurveyQueryError = ErrorType<ErrorResponse>;
 
 /**
- * @summary Get dashboard summary
+ * @summary Get a survey with its questions
  */
 
-export function useGetDashboardSummary<
-  TData = Awaited<ReturnType<typeof getDashboardSummary>>,
-  TError = ErrorType<unknown>,
->(options?: {
-  query?: UseQueryOptions<
-    Awaited<ReturnType<typeof getDashboardSummary>>,
-    TError,
-    TData
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-  const queryOptions = getGetDashboardSummaryQueryOptions(options);
+export function useGetSurvey<
+  TData = Awaited<ReturnType<typeof getSurvey>>,
+  TError = ErrorType<ErrorResponse>,
+>(
+  surveyId: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getSurvey>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetSurveyQueryOptions(surveyId, options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;
@@ -426,32 +359,465 @@ export function useGetDashboardSummary<
 }
 
 /**
- * Returns last 20 resume views
- * @summary Get recent views
+ * @summary Update a survey
  */
-export const getGetRecentViewsUrl = () => {
-  return `/api/dashboard/recent-views`;
+export const getUpdateSurveyUrl = (surveyId: number) => {
+  return `/api/surveys/${surveyId}`;
 };
 
-export const getRecentViews = async (
+export const updateSurvey = async (
+  surveyId: number,
+  updateSurveyBody: UpdateSurveyBody,
   options?: RequestInit,
-): Promise<View[]> => {
-  return customFetch<View[]>(getGetRecentViewsUrl(), {
+): Promise<Survey> => {
+  return customFetch<Survey>(getUpdateSurveyUrl(surveyId), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateSurveyBody),
+  });
+};
+
+export const getUpdateSurveyMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateSurvey>>,
+    TError,
+    { surveyId: number; data: BodyType<UpdateSurveyBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateSurvey>>,
+  TError,
+  { surveyId: number; data: BodyType<UpdateSurveyBody> },
+  TContext
+> => {
+  const mutationKey = ["updateSurvey"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateSurvey>>,
+    { surveyId: number; data: BodyType<UpdateSurveyBody> }
+  > = (props) => {
+    const { surveyId, data } = props ?? {};
+
+    return updateSurvey(surveyId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateSurveyMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateSurvey>>
+>;
+export type UpdateSurveyMutationBody = BodyType<UpdateSurveyBody>;
+export type UpdateSurveyMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Update a survey
+ */
+export const useUpdateSurvey = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateSurvey>>,
+    TError,
+    { surveyId: number; data: BodyType<UpdateSurveyBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateSurvey>>,
+  TError,
+  { surveyId: number; data: BodyType<UpdateSurveyBody> },
+  TContext
+> => {
+  return useMutation(getUpdateSurveyMutationOptions(options));
+};
+
+/**
+ * @summary Delete a survey
+ */
+export const getDeleteSurveyUrl = (surveyId: number) => {
+  return `/api/surveys/${surveyId}`;
+};
+
+export const deleteSurvey = async (
+  surveyId: number,
+  options?: RequestInit,
+): Promise<void> => {
+  return customFetch<void>(getDeleteSurveyUrl(surveyId), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteSurveyMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteSurvey>>,
+    TError,
+    { surveyId: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteSurvey>>,
+  TError,
+  { surveyId: number },
+  TContext
+> => {
+  const mutationKey = ["deleteSurvey"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteSurvey>>,
+    { surveyId: number }
+  > = (props) => {
+    const { surveyId } = props ?? {};
+
+    return deleteSurvey(surveyId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteSurveyMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteSurvey>>
+>;
+
+export type DeleteSurveyMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Delete a survey
+ */
+export const useDeleteSurvey = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteSurvey>>,
+    TError,
+    { surveyId: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteSurvey>>,
+  TError,
+  { surveyId: number },
+  TContext
+> => {
+  return useMutation(getDeleteSurveyMutationOptions(options));
+};
+
+/**
+ * @summary Submit a response to a survey
+ */
+export const getSubmitResponseUrl = (surveyId: number) => {
+  return `/api/surveys/${surveyId}/responses`;
+};
+
+export const submitResponse = async (
+  surveyId: number,
+  submitResponseBody: SubmitResponseBody,
+  options?: RequestInit,
+): Promise<ResponseRecord> => {
+  return customFetch<ResponseRecord>(getSubmitResponseUrl(surveyId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(submitResponseBody),
+  });
+};
+
+export const getSubmitResponseMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof submitResponse>>,
+    TError,
+    { surveyId: number; data: BodyType<SubmitResponseBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof submitResponse>>,
+  TError,
+  { surveyId: number; data: BodyType<SubmitResponseBody> },
+  TContext
+> => {
+  const mutationKey = ["submitResponse"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof submitResponse>>,
+    { surveyId: number; data: BodyType<SubmitResponseBody> }
+  > = (props) => {
+    const { surveyId, data } = props ?? {};
+
+    return submitResponse(surveyId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SubmitResponseMutationResult = NonNullable<
+  Awaited<ReturnType<typeof submitResponse>>
+>;
+export type SubmitResponseMutationBody = BodyType<SubmitResponseBody>;
+export type SubmitResponseMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Submit a response to a survey
+ */
+export const useSubmitResponse = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof submitResponse>>,
+    TError,
+    { surveyId: number; data: BodyType<SubmitResponseBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof submitResponse>>,
+  TError,
+  { surveyId: number; data: BodyType<SubmitResponseBody> },
+  TContext
+> => {
+  return useMutation(getSubmitResponseMutationOptions(options));
+};
+
+/**
+ * @summary Get aggregated results for a survey
+ */
+export const getGetSurveyResultsUrl = (surveyId: number) => {
+  return `/api/surveys/${surveyId}/results`;
+};
+
+export const getSurveyResults = async (
+  surveyId: number,
+  options?: RequestInit,
+): Promise<SurveyResults> => {
+  return customFetch<SurveyResults>(getGetSurveyResultsUrl(surveyId), {
     ...options,
     method: "GET",
   });
 };
 
-export const getGetRecentViewsQueryKey = () => {
-  return [`/api/dashboard/recent-views`] as const;
+export const getGetSurveyResultsQueryKey = (surveyId: number) => {
+  return [`/api/surveys/${surveyId}/results`] as const;
 };
 
-export const getGetRecentViewsQueryOptions = <
-  TData = Awaited<ReturnType<typeof getRecentViews>>,
+export const getGetSurveyResultsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getSurveyResults>>,
+  TError = ErrorType<ErrorResponse>,
+>(
+  surveyId: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getSurveyResults>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetSurveyResultsQueryKey(surveyId);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getSurveyResults>>
+  > = ({ signal }) => getSurveyResults(surveyId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!surveyId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getSurveyResults>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetSurveyResultsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getSurveyResults>>
+>;
+export type GetSurveyResultsQueryError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Get aggregated results for a survey
+ */
+
+export function useGetSurveyResults<
+  TData = Awaited<ReturnType<typeof getSurveyResults>>,
+  TError = ErrorType<ErrorResponse>,
+>(
+  surveyId: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getSurveyResults>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetSurveyResultsQueryOptions(surveyId, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Get all raw responses for a survey
+ */
+export const getGetRawResponsesUrl = (surveyId: number) => {
+  return `/api/surveys/${surveyId}/responses/raw`;
+};
+
+export const getRawResponses = async (
+  surveyId: number,
+  options?: RequestInit,
+): Promise<ResponseWithAnswers[]> => {
+  return customFetch<ResponseWithAnswers[]>(getGetRawResponsesUrl(surveyId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetRawResponsesQueryKey = (surveyId: number) => {
+  return [`/api/surveys/${surveyId}/responses/raw`] as const;
+};
+
+export const getGetRawResponsesQueryOptions = <
+  TData = Awaited<ReturnType<typeof getRawResponses>>,
+  TError = ErrorType<unknown>,
+>(
+  surveyId: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getRawResponses>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetRawResponsesQueryKey(surveyId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getRawResponses>>> = ({
+    signal,
+  }) => getRawResponses(surveyId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!surveyId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getRawResponses>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetRawResponsesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getRawResponses>>
+>;
+export type GetRawResponsesQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get all raw responses for a survey
+ */
+
+export function useGetRawResponses<
+  TData = Awaited<ReturnType<typeof getRawResponses>>,
+  TError = ErrorType<unknown>,
+>(
+  surveyId: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getRawResponses>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetRawResponsesQueryOptions(surveyId, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Get overview stats across all surveys
+ */
+export const getGetDashboardOverviewUrl = () => {
+  return `/api/dashboard/overview`;
+};
+
+export const getDashboardOverview = async (
+  options?: RequestInit,
+): Promise<DashboardOverview> => {
+  return customFetch<DashboardOverview>(getGetDashboardOverviewUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetDashboardOverviewQueryKey = () => {
+  return [`/api/dashboard/overview`] as const;
+};
+
+export const getGetDashboardOverviewQueryOptions = <
+  TData = Awaited<ReturnType<typeof getDashboardOverview>>,
   TError = ErrorType<unknown>,
 >(options?: {
   query?: UseQueryOptions<
-    Awaited<ReturnType<typeof getRecentViews>>,
+    Awaited<ReturnType<typeof getDashboardOverview>>,
     TError,
     TData
   >;
@@ -459,40 +825,40 @@ export const getGetRecentViewsQueryOptions = <
 }) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetRecentViewsQueryKey();
+  const queryKey = queryOptions?.queryKey ?? getGetDashboardOverviewQueryKey();
 
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getRecentViews>>> = ({
-    signal,
-  }) => getRecentViews({ signal, ...requestOptions });
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getDashboardOverview>>
+  > = ({ signal }) => getDashboardOverview({ signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof getRecentViews>>,
+    Awaited<ReturnType<typeof getDashboardOverview>>,
     TError,
     TData
   > & { queryKey: QueryKey };
 };
 
-export type GetRecentViewsQueryResult = NonNullable<
-  Awaited<ReturnType<typeof getRecentViews>>
+export type GetDashboardOverviewQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getDashboardOverview>>
 >;
-export type GetRecentViewsQueryError = ErrorType<unknown>;
+export type GetDashboardOverviewQueryError = ErrorType<unknown>;
 
 /**
- * @summary Get recent views
+ * @summary Get overview stats across all surveys
  */
 
-export function useGetRecentViews<
-  TData = Awaited<ReturnType<typeof getRecentViews>>,
+export function useGetDashboardOverview<
+  TData = Awaited<ReturnType<typeof getDashboardOverview>>,
   TError = ErrorType<unknown>,
 >(options?: {
   query?: UseQueryOptions<
-    Awaited<ReturnType<typeof getRecentViews>>,
+    Awaited<ReturnType<typeof getDashboardOverview>>,
     TError,
     TData
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-  const queryOptions = getGetRecentViewsQueryOptions(options);
+  const queryOptions = getGetDashboardOverviewQueryOptions(options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

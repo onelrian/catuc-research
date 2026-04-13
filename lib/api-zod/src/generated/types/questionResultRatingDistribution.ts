@@ -6,6 +6,4 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface RecordViewBody {
-  referrer?: string;
-}
+export type QuestionResultRatingDistribution = { [key: string]: number };

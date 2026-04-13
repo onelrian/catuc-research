@@ -5,10 +5,11 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { Answer } from "./answer";
 
-export interface View {
+export interface ResponseWithAnswers {
   id: number;
-  referrer?: string;
-  viewedAt: string;
-  ipHash?: string;
+  surveyId: number;
+  submittedAt: string;
+  answers: Answer[];
 }

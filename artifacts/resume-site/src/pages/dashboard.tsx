@@ -1,136 +1,169 @@
-import React from "react";
-import { 
-  useGetDashboardSummary, 
-  getGetDashboardSummaryQueryKey,
-  useGetRecentViews,
-  getGetRecentViewsQueryKey
-} from "@workspace/api-client-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Eye, Calendar, Clock, Users, Activity } from "lucide-react";
-import { format, formatDistanceToNow } from "date-fns";
+import { Layout } from "@/components/layout";
+import { Link } from "wouter";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { useGetDashboardOverview, getGetDashboardOverviewQueryKey } from "@workspace/api-client-react";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip,
+  ResponsiveContainer,
+} from "recharts";
+import { format } from "date-fns";
 
 export default function DashboardPage() {
-  const { data: summary, isLoading: loadingSummary } = useGetDashboardSummary({
-    query: { queryKey: getGetDashboardSummaryQueryKey() }
-  });
-
-  const { data: recentViews, isLoading: loadingViews } = useGetRecentViews({
-    query: { queryKey: getGetRecentViewsQueryKey() }
+  const { data: overview, isLoading, error } = useGetDashboardOverview({
+    query: { queryKey: getGetDashboardOverviewQueryKey() }
   });
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-6xl">
-      <div className="mb-8">
-        <h1 className="font-serif text-3xl font-bold text-foreground">Analytics Overview</h1>
-        <p className="text-muted-foreground mt-2">Monitor who is viewing your professional profile.</p>
-      </div>
-
-      {loadingSummary ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          {[1, 2, 3, 4].map((i) => (
-            <Card key={i}>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <Skeleton className="h-4 w-[100px]" />
-                <Skeleton className="h-4 w-4" />
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="h-8 w-[60px]" />
-              </CardContent>
-            </Card>
-          ))}
+    <Layout>
+      <div className="max-w-5xl mx-auto space-y-8 mt-4">
+        <div className="flex justify-between items-center flex-wrap gap-4">
+          <div>
+            <h1 className="text-3xl font-serif font-semibold text-primary tracking-tight">Researcher Dashboard</h1>
+            <p className="text-muted-foreground mt-1">Overview of your academic studies and responses.</p>
+          </div>
+          <Link href="/dashboard/surveys">
+            <Button>Manage Surveys</Button>
+          </Link>
         </div>
-      ) : summary ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <Card className="bg-card">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Views</CardTitle>
-              <Eye className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-foreground">{summary.totalViews.toLocaleString()}</div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-card">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Views Today</CardTitle>
-              <Activity className="h-4 w-4 text-primary" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-foreground">{summary.viewsToday.toLocaleString()}</div>
-            </CardContent>
-          </Card>
 
-          <Card className="bg-card">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Views This Week</CardTitle>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-foreground">{summary.viewsThisWeek.toLocaleString()}</div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Unique Referrers</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-foreground">{summary.uniqueReferrers.toLocaleString()}</div>
-            </CardContent>
-          </Card>
-        </div>
-      ) : null}
-
-      <h2 className="font-serif text-2xl font-semibold text-foreground mb-4">Recent Activity</h2>
-      
-      <Card className="overflow-hidden">
-        <div className="divide-y divide-border">
-          {loadingViews ? (
-            Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="p-4 flex justify-between items-center">
-                <div className="space-y-2">
-                  <Skeleton className="h-4 w-[200px]" />
-                  <Skeleton className="h-3 w-[150px]" />
-                </div>
-                <Skeleton className="h-4 w-[100px]" />
-              </div>
-            ))
-          ) : recentViews && recentViews.length > 0 ? (
-            recentViews.map((view) => (
-              <div key={view.id} className="p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-muted/50 transition-colors">
-                <div className="flex items-start gap-4">
-                  <div className="bg-primary/10 p-2 rounded-full shrink-0">
-                    <Clock className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <div className="font-medium text-foreground">
-                      {view.referrer && view.referrer !== "direct" ? (
-                        <span>Referred by <span className="text-primary truncate block sm:inline max-w-[200px]">{view.referrer}</span></span>
-                      ) : (
-                        "Direct Visit"
-                      )}
-                    </div>
-                    <div className="text-sm text-muted-foreground mt-1">
-                      {format(new Date(view.viewedAt), "MMM d, yyyy 'at' h:mm a")}
-                    </div>
-                  </div>
-                </div>
-                <div className="text-sm font-medium text-muted-foreground whitespace-nowrap sm:text-right">
-                  {formatDistanceToNow(new Date(view.viewedAt), { addSuffix: true })}
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="p-12 text-center text-muted-foreground">
-              <Eye className="h-12 w-12 mx-auto mb-4 opacity-20" />
-              <p>No recent views found.</p>
+        {isLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-pulse">
+            {[1, 2, 3, 4].map(i => (
+              <Card key={i}>
+                <CardHeader className="pb-2">
+                  <div className="h-4 bg-muted rounded w-1/2"></div>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-8 bg-muted rounded w-1/3"></div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : error || !overview ? (
+          <div className="p-6 text-center border rounded-lg bg-destructive/5 text-destructive border-destructive/20">
+            <p>Error loading dashboard overview.</p>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <Card>
+                <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Total Surveys</CardTitle>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-foreground">{overview.totalSurveys}</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Active Surveys</CardTitle>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-foreground">{overview.activeSurveys}</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Total Responses</CardTitle>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-foreground">{overview.totalResponses}</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Responses Today</CardTitle>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-accent"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-foreground">{overview.responsesToday}</div>
+                </CardContent>
+              </Card>
             </div>
-          )}
-        </div>
-      </Card>
-    </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
+              <Card className="lg:col-span-2 flex flex-col">
+                <CardHeader>
+                  <CardTitle>Recent Activity</CardTitle>
+                </CardHeader>
+                <CardContent className="flex-1 min-h-[300px]">
+                  {overview.recentActivity.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={overview.recentActivity.slice(0, 5)}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                        <XAxis 
+                          dataKey="surveyTitle" 
+                          tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                          tickLine={false}
+                          axisLine={false}
+                          tickFormatter={(val) => val.length > 15 ? val.substring(0, 15) + '...' : val}
+                        />
+                        <YAxis 
+                          tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                          tickLine={false}
+                          axisLine={false}
+                        />
+                        <RechartsTooltip 
+                          cursor={{ fill: 'hsl(var(--muted))', opacity: 0.4 }}
+                          contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 'var(--radius)' }}
+                        />
+                        <Bar 
+                          dataKey="responseCount" 
+                          name="Responses" 
+                          fill="hsl(var(--primary))" 
+                          radius={[4, 4, 0, 0]} 
+                          barSize={40}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
+                      No response data available
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card className="flex flex-col">
+                <CardHeader>
+                  <CardTitle>Active Studies</CardTitle>
+                </CardHeader>
+                <CardContent className="flex-1">
+                  <div className="space-y-4">
+                    {overview.recentActivity.map((activity, i) => (
+                      <Link key={i} href={`/dashboard/surveys/${activity.surveyId}/results`} className="block group">
+                        <div className="p-3 border rounded-lg hover:border-primary/50 transition-colors bg-card">
+                          <div className="font-medium text-sm text-foreground group-hover:text-primary transition-colors line-clamp-1">{activity.surveyTitle}</div>
+                          <div className="flex justify-between items-center mt-2 text-xs text-muted-foreground">
+                            <span>{activity.responseCount} responses</span>
+                            {activity.lastResponseAt && (
+                              <span>Last: {format(new Date(activity.lastResponseAt), "MMM d")}</span>
+                            )}
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                    {overview.recentActivity.length === 0 && (
+                      <div className="text-center py-8 text-muted-foreground text-sm">
+                        No active studies
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </>
+        )}
+      </div>
+    </Layout>
   );
 }

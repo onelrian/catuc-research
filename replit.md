@@ -26,25 +26,33 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 
 ## Artifacts
 
-### resume-site (React + Vite, preview at `/`)
-Ashley's professional resume website with two pages:
-- `/` — Public resume page (shareable link, auto-logs views)
-- `/dashboard` — Analytics overview (total views, views today/week/month, unique referrers, recent view feed)
+### resume-site (React + Vite, preview at `/`) — Research Survey Platform
+Ashley's research questionnaire platform for Business and Management Sciences research.
 
-Color palette: warm ochre/gold and slate — derived from business/management domain.
-Has a "Copy Link" button for easy sharing.
+Pages:
+- `/` — Public home: lists all active surveys for participants
+- `/survey/:surveyId` — Participant survey form (all question types: text, multiple_choice, rating, yes_no). Submits responses to backend.
+- `/dashboard` — Researcher dashboard overview: stats (total surveys, active, total responses, responses today), recent activity chart, active studies list
+- `/dashboard/surveys` — Survey management: create/edit/delete surveys, toggle active/inactive, add questions with a question builder
+- `/dashboard/surveys/:surveyId/results` — Results & analysis: aggregated question results with charts (pie, bar, rating distribution), text answer feed, raw responses table
 
 ### api-server (Express, preview at `/api`)
-Backend API with endpoints:
-- `GET /api/resume` — fetch resume data
-- `PUT /api/resume` — update resume data
-- `POST /api/views` — log a resume view
-- `GET /api/dashboard/summary` — aggregated stats
-- `GET /api/dashboard/recent-views` — last 20 views
+Backend API endpoints:
+- `GET /api/surveys` — list all surveys
+- `POST /api/surveys` — create survey
+- `GET /api/surveys/:id` — get survey with questions
+- `PUT /api/surveys/:id` — update survey
+- `DELETE /api/surveys/:id` — delete survey
+- `POST /api/surveys/:id/responses` — submit a participant response
+- `GET /api/surveys/:id/results` — get aggregated analysis results
+- `GET /api/surveys/:id/responses/raw` — get all raw individual responses
+- `GET /api/dashboard/overview` — cross-survey stats
 
 ## Database Schema
 
-- `resume` — single row storing Ashley's resume (name, title, email, experience, education, skills, certifications etc.)
-- `views` — tracks every time someone opens the resume (referrer, ip_hash, viewed_at)
+- `surveys` — survey title, description, isActive, timestamps
+- `questions` — text, type (text/multiple_choice/rating/yes_no), options[], isRequired, orderIndex, FK to survey
+- `responses` — FK to survey, submittedAt timestamp
+- `answers` — FK to response + question, value (text), values[] (for multiple choice), question text snapshot
 
 See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details.

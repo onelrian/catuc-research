@@ -10,19 +10,18 @@ servers:
 tags:
   - name: health
     description: Health operations
-  - name: resume
-    description: Resume data
-  - name: views
-    description: Resume view tracking
-  - name: dashboard
-    description: Dashboard overview data
+  - name: surveys
+    description: Survey management
+  - name: responses
+    description: Survey response collection
+  - name: results
+    description: Results and analysis
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -31,86 +30,188 @@ paths:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
 
-  /resume:
+  /surveys:
     get:
-      operationId: getResume
-      tags: [resume]
-      summary: Get resume data
-      description: Returns the full resume profile
+      operationId: listSurveys
+      tags: [surveys]
+      summary: List all surveys
       responses:
         "200":
-          description: Resume profile
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Resume"
-    put:
-      operationId: updateResume
-      tags: [resume]
-      summary: Update resume data
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/ResumeUpdate"
-      responses:
-        "200":
-          description: Updated resume
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Resume"
-
-  /views:
-    post:
-      operationId: recordView
-      tags: [views]
-      summary: Record a resume view
-      description: Logs a new view when someone opens the resume
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/RecordViewBody"
-      responses:
-        "201":
-          description: View recorded
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/View"
-
-  /dashboard/summary:
-    get:
-      operationId: getDashboardSummary
-      tags: [dashboard]
-      summary: Get dashboard summary
-      description: Returns aggregated view statistics and overview metrics
-      responses:
-        "200":
-          description: Dashboard summary
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/DashboardSummary"
-
-  /dashboard/recent-views:
-    get:
-      operationId: getRecentViews
-      tags: [dashboard]
-      summary: Get recent views
-      description: Returns last 20 resume views
-      responses:
-        "200":
-          description: Recent views list
+          description: List of surveys
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/View"
+                  $ref: "#/components/schemas/Survey"
+    post:
+      operationId: createSurvey
+      tags: [surveys]
+      summary: Create a new survey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSurveyBody"
+      responses:
+        "201":
+          description: Created survey
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Survey"
+
+  /surveys/{surveyId}:
+    get:
+      operationId: getSurvey
+      tags: [surveys]
+      summary: Get a survey with its questions
+      parameters:
+        - name: surveyId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Survey with questions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SurveyWithQuestions"
+        "404":
+          description: Survey not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    put:
+      operationId: updateSurvey
+      tags: [surveys]
+      summary: Update a survey
+      parameters:
+        - name: surveyId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateSurveyBody"
+      responses:
+        "200":
+          description: Updated survey
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Survey"
+    delete:
+      operationId: deleteSurvey
+      tags: [surveys]
+      summary: Delete a survey
+      parameters:
+        - name: surveyId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /surveys/{surveyId}/responses:
+    post:
+      operationId: submitResponse
+      tags: [responses]
+      summary: Submit a response to a survey
+      parameters:
+        - name: surveyId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmitResponseBody"
+      responses:
+        "201":
+          description: Response recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseRecord"
+        "404":
+          description: Survey not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /surveys/{surveyId}/results:
+    get:
+      operationId: getSurveyResults
+      tags: [results]
+      summary: Get aggregated results for a survey
+      parameters:
+        - name: surveyId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Aggregated results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SurveyResults"
+        "404":
+          description: Survey not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /surveys/{surveyId}/responses/raw:
+    get:
+      operationId: getRawResponses
+      tags: [results]
+      summary: Get all raw responses for a survey
+      parameters:
+        - name: surveyId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Raw response list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ResponseWithAnswers"
+
+  /dashboard/overview:
+    get:
+      operationId: getDashboardOverview
+      tags: [results]
+      summary: Get overview stats across all surveys
+      responses:
+        "200":
+          description: Overview stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardOverview"
 
 components:
   schemas:
@@ -119,185 +220,263 @@ components:
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
 
-    Resume:
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
+
+    Survey:
       type: object
       properties:
         id:
           type: integer
-        name:
-          type: string
         title:
           type: string
-        email:
+        description:
           type: string
-        phone:
-          type: string
-        location:
-          type: string
-        summary:
-          type: string
-        linkedin:
-          type: string
-        website:
-          type: string
-        skills:
-          type: array
-          items:
-            type: string
-        experience:
-          type: array
-          items:
-            $ref: "#/components/schemas/Experience"
-        education:
-          type: array
-          items:
-            $ref: "#/components/schemas/Education"
-        certifications:
-          type: array
-          items:
-            type: string
+        isActive:
+          type: boolean
+        responseCount:
+          type: integer
         createdAt:
           type: string
         updatedAt:
           type: string
-      required:
-        - id
-        - name
-        - title
-        - email
-        - summary
-        - skills
-        - experience
-        - education
-        - certifications
-        - createdAt
-        - updatedAt
+      required: [id, title, isActive, responseCount, createdAt, updatedAt]
 
-    ResumeUpdate:
-      type: object
-      properties:
-        name:
-          type: string
-        title:
-          type: string
-        email:
-          type: string
-        phone:
-          type: string
-        location:
-          type: string
-        summary:
-          type: string
-        linkedin:
-          type: string
-        website:
-          type: string
-        skills:
-          type: array
-          items:
-            type: string
-        experience:
-          type: array
-          items:
-            $ref: "#/components/schemas/Experience"
-        education:
-          type: array
-          items:
-            $ref: "#/components/schemas/Education"
-        certifications:
-          type: array
-          items:
-            type: string
-
-    Experience:
-      type: object
-      properties:
-        company:
-          type: string
-        role:
-          type: string
-        startDate:
-          type: string
-        endDate:
-          type: string
-        description:
-          type: string
-        bullets:
-          type: array
-          items:
-            type: string
-      required:
-        - company
-        - role
-        - startDate
-        - description
-        - bullets
-
-    Education:
-      type: object
-      properties:
-        institution:
-          type: string
-        degree:
-          type: string
-        field:
-          type: string
-        startYear:
-          type: integer
-        endYear:
-          type: integer
-        gpa:
-          type: string
-        honors:
-          type: string
-      required:
-        - institution
-        - degree
-        - field
-        - startYear
-
-    View:
+    SurveyWithQuestions:
       type: object
       properties:
         id:
           type: integer
-        referrer:
+        title:
           type: string
-        viewedAt:
+        description:
           type: string
-        ipHash:
+        isActive:
+          type: boolean
+        responseCount:
+          type: integer
+        createdAt:
           type: string
-      required:
-        - id
-        - viewedAt
+        updatedAt:
+          type: string
+        questions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Question"
+      required: [id, title, isActive, responseCount, createdAt, updatedAt, questions]
 
-    RecordViewBody:
+    Question:
       type: object
       properties:
-        referrer:
+        id:
+          type: integer
+        surveyId:
+          type: integer
+        text:
           type: string
+        type:
+          type: string
+          enum: [text, multiple_choice, rating, yes_no]
+        options:
+          type: array
+          items:
+            type: string
+        isRequired:
+          type: boolean
+        orderIndex:
+          type: integer
+      required: [id, surveyId, text, type, options, isRequired, orderIndex]
 
-    DashboardSummary:
+    CreateSurveyBody:
       type: object
       properties:
-        totalViews:
-          type: integer
-        viewsToday:
-          type: integer
-        viewsThisWeek:
-          type: integer
-        viewsThisMonth:
-          type: integer
-        uniqueReferrers:
-          type: integer
-        lastViewedAt:
+        title:
           type: string
-      required:
-        - totalViews
-        - viewsToday
-        - viewsThisWeek
-        - viewsThisMonth
-        - uniqueReferrers
+        description:
+          type: string
+        questions:
+          type: array
+          items:
+            $ref: "#/components/schemas/CreateQuestionBody"
+      required: [title, questions]
+
+    CreateQuestionBody:
+      type: object
+      properties:
+        text:
+          type: string
+        type:
+          type: string
+          enum: [text, multiple_choice, rating, yes_no]
+        options:
+          type: array
+          items:
+            type: string
+        isRequired:
+          type: boolean
+        orderIndex:
+          type: integer
+      required: [text, type]
+
+    UpdateSurveyBody:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        isActive:
+          type: boolean
+        questions:
+          type: array
+          items:
+            $ref: "#/components/schemas/CreateQuestionBody"
+
+    SubmitResponseBody:
+      type: object
+      properties:
+        answers:
+          type: array
+          items:
+            $ref: "#/components/schemas/AnswerInput"
+      required: [answers]
+
+    AnswerInput:
+      type: object
+      properties:
+        questionId:
+          type: integer
+        value:
+          type: string
+        values:
+          type: array
+          items:
+            type: string
+      required: [questionId]
+
+    ResponseRecord:
+      type: object
+      properties:
+        id:
+          type: integer
+        surveyId:
+          type: integer
+        submittedAt:
+          type: string
+      required: [id, surveyId, submittedAt]
+
+    ResponseWithAnswers:
+      type: object
+      properties:
+        id:
+          type: integer
+        surveyId:
+          type: integer
+        submittedAt:
+          type: string
+        answers:
+          type: array
+          items:
+            $ref: "#/components/schemas/Answer"
+      required: [id, surveyId, submittedAt, answers]
+
+    Answer:
+      type: object
+      properties:
+        id:
+          type: integer
+        questionId:
+          type: integer
+        questionText:
+          type: string
+        value:
+          type: string
+        values:
+          type: array
+          items:
+            type: string
+      required: [id, questionId, questionText]
+
+    SurveyResults:
+      type: object
+      properties:
+        surveyId:
+          type: integer
+        surveyTitle:
+          type: string
+        totalResponses:
+          type: integer
+        completionRate:
+          type: number
+        questionResults:
+          type: array
+          items:
+            $ref: "#/components/schemas/QuestionResult"
+        recentResponses:
+          type: array
+          items:
+            $ref: "#/components/schemas/ResponseRecord"
+      required: [surveyId, surveyTitle, totalResponses, completionRate, questionResults, recentResponses]
+
+    QuestionResult:
+      type: object
+      properties:
+        questionId:
+          type: integer
+        questionText:
+          type: string
+        questionType:
+          type: string
+        totalAnswers:
+          type: integer
+        textAnswers:
+          type: array
+          items:
+            type: string
+        choiceCounts:
+          type: object
+          additionalProperties:
+            type: integer
+        averageRating:
+          type: number
+        ratingDistribution:
+          type: object
+          additionalProperties:
+            type: integer
+      required: [questionId, questionText, questionType, totalAnswers]
+
+    DashboardOverview:
+      type: object
+      properties:
+        totalSurveys:
+          type: integer
+        activeSurveys:
+          type: integer
+        totalResponses:
+          type: integer
+        responsesToday:
+          type: integer
+        recentActivity:
+          type: array
+          items:
+            $ref: "#/components/schemas/ActivityItem"
+      required: [totalSurveys, activeSurveys, totalResponses, responsesToday, recentActivity]
+
+    ActivityItem:
+      type: object
+      properties:
+        surveyId:
+          type: integer
+        surveyTitle:
+          type: string
+        responseCount:
+          type: integer
+        lastResponseAt:
+          type: string
+      required: [surveyId, surveyTitle, responseCount]

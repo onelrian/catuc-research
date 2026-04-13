@@ -8,7 +8,6 @@
 import * as zod from "zod";
 
 /**
- * Returns server health status
  * @summary Health check
  */
 export const HealthCheckResponse = zod.object({
@@ -16,153 +15,192 @@ export const HealthCheckResponse = zod.object({
 });
 
 /**
- * Returns the full resume profile
- * @summary Get resume data
+ * @summary List all surveys
  */
-export const GetResumeResponse = zod.object({
+export const ListSurveysResponseItem = zod.object({
   id: zod.number(),
-  name: zod.string(),
   title: zod.string(),
-  email: zod.string(),
-  phone: zod.string().optional(),
-  location: zod.string().optional(),
-  summary: zod.string(),
-  linkedin: zod.string().optional(),
-  website: zod.string().optional(),
-  skills: zod.array(zod.string()),
-  experience: zod.array(
-    zod.object({
-      company: zod.string(),
-      role: zod.string(),
-      startDate: zod.string(),
-      endDate: zod.string().optional(),
-      description: zod.string(),
-      bullets: zod.array(zod.string()),
-    }),
-  ),
-  education: zod.array(
-    zod.object({
-      institution: zod.string(),
-      degree: zod.string(),
-      field: zod.string(),
-      startYear: zod.number(),
-      endYear: zod.number().optional(),
-      gpa: zod.string().optional(),
-      honors: zod.string().optional(),
-    }),
-  ),
-  certifications: zod.array(zod.string()),
+  description: zod.string().optional(),
+  isActive: zod.boolean(),
+  responseCount: zod.number(),
   createdAt: zod.string(),
   updatedAt: zod.string(),
 });
+export const ListSurveysResponse = zod.array(ListSurveysResponseItem);
 
 /**
- * @summary Update resume data
+ * @summary Create a new survey
  */
-export const UpdateResumeBody = zod.object({
-  name: zod.string().optional(),
+export const CreateSurveyBody = zod.object({
+  title: zod.string(),
+  description: zod.string().optional(),
+  questions: zod.array(
+    zod.object({
+      text: zod.string(),
+      type: zod.enum(["text", "multiple_choice", "rating", "yes_no"]),
+      options: zod.array(zod.string()).optional(),
+      isRequired: zod.boolean().optional(),
+      orderIndex: zod.number().optional(),
+    }),
+  ),
+});
+
+/**
+ * @summary Get a survey with its questions
+ */
+export const GetSurveyParams = zod.object({
+  surveyId: zod.coerce.number(),
+});
+
+export const GetSurveyResponse = zod.object({
+  id: zod.number(),
+  title: zod.string(),
+  description: zod.string().optional(),
+  isActive: zod.boolean(),
+  responseCount: zod.number(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+  questions: zod.array(
+    zod.object({
+      id: zod.number(),
+      surveyId: zod.number(),
+      text: zod.string(),
+      type: zod.enum(["text", "multiple_choice", "rating", "yes_no"]),
+      options: zod.array(zod.string()),
+      isRequired: zod.boolean(),
+      orderIndex: zod.number(),
+    }),
+  ),
+});
+
+/**
+ * @summary Update a survey
+ */
+export const UpdateSurveyParams = zod.object({
+  surveyId: zod.coerce.number(),
+});
+
+export const UpdateSurveyBody = zod.object({
   title: zod.string().optional(),
-  email: zod.string().optional(),
-  phone: zod.string().optional(),
-  location: zod.string().optional(),
-  summary: zod.string().optional(),
-  linkedin: zod.string().optional(),
-  website: zod.string().optional(),
-  skills: zod.array(zod.string()).optional(),
-  experience: zod
+  description: zod.string().optional(),
+  isActive: zod.boolean().optional(),
+  questions: zod
     .array(
       zod.object({
-        company: zod.string(),
-        role: zod.string(),
-        startDate: zod.string(),
-        endDate: zod.string().optional(),
-        description: zod.string(),
-        bullets: zod.array(zod.string()),
+        text: zod.string(),
+        type: zod.enum(["text", "multiple_choice", "rating", "yes_no"]),
+        options: zod.array(zod.string()).optional(),
+        isRequired: zod.boolean().optional(),
+        orderIndex: zod.number().optional(),
       }),
     )
     .optional(),
-  education: zod
-    .array(
-      zod.object({
-        institution: zod.string(),
-        degree: zod.string(),
-        field: zod.string(),
-        startYear: zod.number(),
-        endYear: zod.number().optional(),
-        gpa: zod.string().optional(),
-        honors: zod.string().optional(),
-      }),
-    )
-    .optional(),
-  certifications: zod.array(zod.string()).optional(),
 });
 
-export const UpdateResumeResponse = zod.object({
+export const UpdateSurveyResponse = zod.object({
   id: zod.number(),
-  name: zod.string(),
   title: zod.string(),
-  email: zod.string(),
-  phone: zod.string().optional(),
-  location: zod.string().optional(),
-  summary: zod.string(),
-  linkedin: zod.string().optional(),
-  website: zod.string().optional(),
-  skills: zod.array(zod.string()),
-  experience: zod.array(
-    zod.object({
-      company: zod.string(),
-      role: zod.string(),
-      startDate: zod.string(),
-      endDate: zod.string().optional(),
-      description: zod.string(),
-      bullets: zod.array(zod.string()),
-    }),
-  ),
-  education: zod.array(
-    zod.object({
-      institution: zod.string(),
-      degree: zod.string(),
-      field: zod.string(),
-      startYear: zod.number(),
-      endYear: zod.number().optional(),
-      gpa: zod.string().optional(),
-      honors: zod.string().optional(),
-    }),
-  ),
-  certifications: zod.array(zod.string()),
+  description: zod.string().optional(),
+  isActive: zod.boolean(),
+  responseCount: zod.number(),
   createdAt: zod.string(),
   updatedAt: zod.string(),
 });
 
 /**
- * Logs a new view when someone opens the resume
- * @summary Record a resume view
+ * @summary Delete a survey
  */
-export const RecordViewBody = zod.object({
-  referrer: zod.string().optional(),
+export const DeleteSurveyParams = zod.object({
+  surveyId: zod.coerce.number(),
 });
 
 /**
- * Returns aggregated view statistics and overview metrics
- * @summary Get dashboard summary
+ * @summary Submit a response to a survey
  */
-export const GetDashboardSummaryResponse = zod.object({
-  totalViews: zod.number(),
-  viewsToday: zod.number(),
-  viewsThisWeek: zod.number(),
-  viewsThisMonth: zod.number(),
-  uniqueReferrers: zod.number(),
-  lastViewedAt: zod.string().optional(),
+export const SubmitResponseParams = zod.object({
+  surveyId: zod.coerce.number(),
+});
+
+export const SubmitResponseBody = zod.object({
+  answers: zod.array(
+    zod.object({
+      questionId: zod.number(),
+      value: zod.string().optional(),
+      values: zod.array(zod.string()).optional(),
+    }),
+  ),
 });
 
 /**
- * Returns last 20 resume views
- * @summary Get recent views
+ * @summary Get aggregated results for a survey
  */
-export const GetRecentViewsResponseItem = zod.object({
+export const GetSurveyResultsParams = zod.object({
+  surveyId: zod.coerce.number(),
+});
+
+export const GetSurveyResultsResponse = zod.object({
+  surveyId: zod.number(),
+  surveyTitle: zod.string(),
+  totalResponses: zod.number(),
+  completionRate: zod.number(),
+  questionResults: zod.array(
+    zod.object({
+      questionId: zod.number(),
+      questionText: zod.string(),
+      questionType: zod.string(),
+      totalAnswers: zod.number(),
+      textAnswers: zod.array(zod.string()).optional(),
+      choiceCounts: zod.record(zod.string(), zod.number()).optional(),
+      averageRating: zod.number().optional(),
+      ratingDistribution: zod.record(zod.string(), zod.number()).optional(),
+    }),
+  ),
+  recentResponses: zod.array(
+    zod.object({
+      id: zod.number(),
+      surveyId: zod.number(),
+      submittedAt: zod.string(),
+    }),
+  ),
+});
+
+/**
+ * @summary Get all raw responses for a survey
+ */
+export const GetRawResponsesParams = zod.object({
+  surveyId: zod.coerce.number(),
+});
+
+export const GetRawResponsesResponseItem = zod.object({
   id: zod.number(),
-  referrer: zod.string().optional(),
-  viewedAt: zod.string(),
-  ipHash: zod.string().optional(),
+  surveyId: zod.number(),
+  submittedAt: zod.string(),
+  answers: zod.array(
+    zod.object({
+      id: zod.number(),
+      questionId: zod.number(),
+      questionText: zod.string(),
+      value: zod.string().optional(),
+      values: zod.array(zod.string()).optional(),
+    }),
+  ),
 });
-export const GetRecentViewsResponse = zod.array(GetRecentViewsResponseItem);
+export const GetRawResponsesResponse = zod.array(GetRawResponsesResponseItem);
+
+/**
+ * @summary Get overview stats across all surveys
+ */
+export const GetDashboardOverviewResponse = zod.object({
+  totalSurveys: zod.number(),
+  activeSurveys: zod.number(),
+  totalResponses: zod.number(),
+  responsesToday: zod.number(),
+  recentActivity: zod.array(
+    zod.object({
+      surveyId: zod.number(),
+      surveyTitle: zod.string(),
+      responseCount: zod.number(),
+      lastResponseAt: zod.string().optional(),
+    }),
+  ),
+});

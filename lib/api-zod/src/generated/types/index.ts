@@ -6,11 +6,24 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export * from "./dashboardSummary";
-export * from "./education";
-export * from "./experience";
+export * from "./activityItem";
+export * from "./answer";
+export * from "./answerInput";
+export * from "./createQuestionBody";
+export * from "./createQuestionBodyType";
+export * from "./createSurveyBody";
+export * from "./dashboardOverview";
+export * from "./errorResponse";
 export * from "./healthStatus";
-export * from "./recordViewBody";
-export * from "./resume";
-export * from "./resumeUpdate";
-export * from "./view";
+export * from "./question";
+export * from "./questionResult";
+export * from "./questionResultChoiceCounts";
+export * from "./questionResultRatingDistribution";
+export * from "./questionType";
+export * from "./responseRecord";
+export * from "./responseWithAnswers";
+export * from "./submitResponseBody";
+export * from "./survey";
+export * from "./surveyResults";
+export * from "./surveyWithQuestions";
+export * from "./updateSurveyBody";
