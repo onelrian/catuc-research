@@ -1,3 +1,8 @@
+import serverless from "serverless-http";
+import app from "../../../api-server/src/app";
+import { seedCatucQuestionnaire } from "../../../api-server/src/lib/seed-catuc";
+import { type Config } from "@netlify/functions";
+
 // Singleton to track if seeding has been performed in this instance
 let isSeeded = false;
 
