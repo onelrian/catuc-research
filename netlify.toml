@@ -10,12 +10,11 @@
   directory = "artifacts/resume-site/dist-functions"
   node_bundler = "none"
 
-# 1. (Handled by Netlify V2 Function natively)
-# [[redirects]]
-#   from = "/api/*"
-#   to = "/.netlify/functions/api/:splat"
-#   status = 200
-#   force = true
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+  force = true
 
 # 2. SPA routing: Ensures React Router works on page refreshes
 [[redirects]]
