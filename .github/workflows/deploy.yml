@@ -41,9 +41,10 @@ jobs:
 
       - name: Database Push
         run: |
-          npx pnpm --filter @workspace/db drizzle-kit push
+          npx pnpm --filter @workspace/db run push
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
 
       - name: Deploy to Netlify
         uses: nwtgck/actions-netlify@v3.0
