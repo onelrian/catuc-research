@@ -69,6 +69,8 @@ export const GetSurveyResponse = zod.object({
       options: zod.array(zod.string()),
       isRequired: zod.boolean(),
       orderIndex: zod.number(),
+      section: zod.string().optional(),
+      sectionDescription: zod.string().optional(),
     }),
   ),
 });

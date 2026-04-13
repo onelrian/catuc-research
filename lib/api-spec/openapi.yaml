@@ -291,6 +291,10 @@ components:
           type: boolean
         orderIndex:
           type: integer
+        section:
+          type: string
+        sectionDescription:
+          type: string
       required: [id, surveyId, text, type, options, isRequired, orderIndex]
 
     CreateSurveyBody:

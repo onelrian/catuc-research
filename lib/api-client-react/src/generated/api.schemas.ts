@@ -40,6 +40,8 @@ export interface Question {
   options: string[];
   isRequired: boolean;
   orderIndex: number;
+  section?: string;
+  sectionDescription?: string;
 }
 
 export interface SurveyWithQuestions {

@@ -1,22 +1,34 @@
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useParams, useLocation } from "wouter";
 import { Layout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { motion, AnimatePresence } from "framer-motion";
+import { ChevronLeft, ChevronRight, CheckCircle2 } from "lucide-react";
 import {
   useGetSurvey,
   getGetSurveyQueryKey,
   useSubmitResponse,
   Question,
 } from "@workspace/api-client-react";
+
+const LIKERT_OPTIONS = ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"];
+const LIKERT_SHORT = ["SD", "D", "N", "A", "SA"];
+const LIKERT_COLORS = [
+  "hover:bg-rose-100 dark:hover:bg-rose-950/50 data-[state=checked]:bg-rose-500 data-[state=checked]:text-white data-[state=checked]:border-rose-500",
+  "hover:bg-orange-100 dark:hover:bg-orange-950/50 data-[state=checked]:bg-orange-500 data-[state=checked]:text-white data-[state=checked]:border-orange-500",
+  "hover:bg-slate-100 dark:hover:bg-slate-800 data-[state=checked]:bg-slate-500 data-[state=checked]:text-white data-[state=checked]:border-slate-500",
+  "hover:bg-emerald-100 dark:hover:bg-emerald-950/50 data-[state=checked]:bg-emerald-500 data-[state=checked]:text-white data-[state=checked]:border-emerald-500",
+  "hover:bg-emerald-100 dark:hover:bg-emerald-950/50 data-[state=checked]:bg-emerald-700 data-[state=checked]:text-white data-[state=checked]:border-emerald-700",
+];
 
 export default function SurveyPage() {
   const { surveyId } = useParams<{ surveyId: string }>();
@@ -35,12 +47,39 @@ export default function SurveyPage() {
 
   const [answers, setAnswers] = useState<Record<number, any>>({});
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [currentSectionIndex]);
+
+  const sections = useMemo(() => {
+    if (!survey?.questions) return [];
+    
+    const sectionMap = new Map<string, { title: string, description?: string, questions: Question[] }>();
+    
+    // Group by section
+    survey.questions.forEach((q) => {
+      const secTitle = q.section || "General";
+      if (!sectionMap.has(secTitle)) {
+        sectionMap.set(secTitle, {
+          title: secTitle,
+          description: q.sectionDescription,
+          questions: []
+        });
+      }
+      sectionMap.get(secTitle)!.questions.push(q);
+    });
+
+    // Convert to array and preserve a sensible order
+    return Array.from(sectionMap.values());
+  }, [survey]);
 
   if (isNaN(id)) {
     return (
       <Layout>
-        <div className="text-center py-12">
-          <h2 className="text-xl font-semibold text-destructive">Invalid Survey ID</h2>
+        <div className="text-center py-20">
+          <h2 className="text-2xl font-serif font-semibold text-destructive">Invalid Survey ID</h2>
         </div>
       </Layout>
     );
@@ -49,15 +88,19 @@ export default function SurveyPage() {
   if (isLoading) {
     return (
       <Layout>
-        <div className="max-w-2xl mx-auto space-y-6 mt-8 animate-pulse">
-          <div className="h-8 bg-muted rounded w-1/2"></div>
-          <div className="h-4 bg-muted rounded w-full"></div>
-          <Card>
-            <CardContent className="p-6 space-y-4">
-              <div className="h-4 bg-muted rounded w-1/3"></div>
-              <div className="h-10 bg-muted rounded w-full"></div>
-            </CardContent>
-          </Card>
+        <div className="max-w-3xl mx-auto space-y-8 mt-12 animate-pulse">
+          <div className="h-10 bg-muted rounded w-2/3"></div>
+          <div className="h-2 bg-muted rounded w-full"></div>
+          <div className="space-y-4">
+            {[1, 2, 3].map(i => (
+              <Card key={i}>
+                <CardContent className="p-8 space-y-6">
+                  <div className="h-6 bg-muted rounded w-3/4"></div>
+                  <div className="h-12 bg-muted rounded w-full"></div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
       </Layout>
     );
@@ -66,11 +109,11 @@ export default function SurveyPage() {
   if (error || !survey) {
     return (
       <Layout>
-        <div className="max-w-2xl mx-auto text-center py-12 border rounded-lg bg-destructive/5 text-destructive border-destructive/20 mt-8">
-          <h2 className="text-xl font-semibold mb-2">Survey Not Found</h2>
-          <p>We couldn't find the survey you're looking for or it may no longer be available.</p>
-          <Button variant="outline" className="mt-4" onClick={() => setLocation("/")}>
-            Return to Available Studies
+        <div className="max-w-xl mx-auto text-center py-20 px-8 border rounded-2xl bg-destructive/5 text-destructive border-destructive/20 mt-12 shadow-sm">
+          <h2 className="text-2xl font-serif font-semibold mb-4">Study Not Found</h2>
+          <p className="text-lg opacity-90 mb-8">We couldn't locate the requested instrument or it may be closed.</p>
+          <Button variant="outline" size="lg" onClick={() => setLocation("/")}>
+            Return to Directory
           </Button>
         </div>
       </Layout>
@@ -80,30 +123,44 @@ export default function SurveyPage() {
   if (isSubmitted) {
     return (
       <Layout>
-        <div className="max-w-2xl mx-auto text-center py-16 px-4 mt-8 bg-card border rounded-lg shadow-sm">
-          <div className="w-16 h-16 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto mb-6">
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="max-w-2xl mx-auto text-center py-24 px-8 mt-12 bg-card border rounded-2xl shadow-xl"
+        >
+          <div className="w-24 h-24 bg-emerald-500/10 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-8">
+            <CheckCircle2 className="w-12 h-12" />
           </div>
-          <h2 className="text-3xl font-serif font-semibold text-primary mb-4">Response Recorded</h2>
-          <p className="text-lg text-muted-foreground mb-8 max-w-lg mx-auto">
-            Thank you for participating in "{survey.title}". Your contribution is valuable to our research.
+          <h2 className="text-4xl font-serif font-bold text-foreground mb-6">Response Recorded</h2>
+          <p className="text-xl text-muted-foreground mb-12 max-w-lg mx-auto leading-relaxed">
+            Your data has been successfully securely transmitted to the CATUC research database. Thank you for your contribution.
           </p>
-          <Button onClick={() => setLocation("/")} size="lg">
-            Return to Available Studies
+          <Button onClick={() => setLocation("/")} size="lg" className="px-8 py-6 text-lg rounded-full">
+            Return to Directory
           </Button>
-        </div>
+        </motion.div>
       </Layout>
     );
   }
 
+  const currentSection = sections[currentSectionIndex];
+  const totalSections = sections.length;
   const questions = survey.questions || [];
+  
   const answeredCount = Object.keys(answers).filter(k => {
     const val = answers[Number(k)];
     if (Array.isArray(val)) return val.length > 0;
     return val !== undefined && val !== "";
   }).length;
   
-  const progress = questions.length > 0 ? Math.round((answeredCount / questions.length) * 100) : 0;
+  const overallProgress = questions.length > 0 ? Math.round((answeredCount / questions.length) * 100) : 0;
+  
+  const sectionQuestions = currentSection?.questions || [];
+  const sectionAnsweredCount = sectionQuestions.filter(q => {
+    const val = answers[q.id];
+    if (Array.isArray(val)) return val.length > 0;
+    return val !== undefined && val !== "";
+  }).length;
 
   const handleAnswerChange = (questionId: number, value: any) => {
     setAnswers(prev => ({
@@ -112,25 +169,39 @@ export default function SurveyPage() {
     }));
   };
 
-  const handleCheckboxChange = (questionId: number, option: string, checked: boolean) => {
-    setAnswers(prev => {
-      const current = prev[questionId] || [];
-      if (checked) {
-        return { ...prev, [questionId]: [...current, option] };
-      } else {
-        return { ...prev, [questionId]: current.filter((item: string) => item !== option) };
-      }
-    });
+  const handleNextSection = () => {
+    // Validate current section required fields
+    const missingRequired = sectionQuestions.filter(q => q.isRequired && (!answers[q.id] || (Array.isArray(answers[q.id]) && answers[q.id].length === 0)));
+    
+    if (missingRequired.length > 0) {
+      toast({
+        title: "Incomplete Section",
+        description: "Please answer all required questions before proceeding.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (currentSectionIndex < totalSections - 1) {
+      setCurrentSectionIndex(prev => prev + 1);
+    } else {
+      handleSubmit();
+    }
+  };
+
+  const handlePrevSection = () => {
+    if (currentSectionIndex > 0) {
+      setCurrentSectionIndex(prev => prev - 1);
+    }
   };
 
   const handleSubmit = () => {
-    // Validate required fields
-    const missingRequired = questions.filter(q => q.isRequired && !answers[q.id]);
+    const missingRequired = questions.filter(q => q.isRequired && (!answers[q.id] || (Array.isArray(answers[q.id]) && answers[q.id].length === 0)));
     
     if (missingRequired.length > 0) {
       toast({
         title: "Missing Information",
-        description: "Please answer all required questions before submitting.",
+        description: "Please answer all required questions across all sections before submitting.",
         variant: "destructive"
       });
       return;
@@ -165,136 +236,272 @@ export default function SurveyPage() {
   const renderQuestionInput = (question: Question) => {
     const value = answers[question.id];
 
+    // Check if it's a Likert scale question
+    const isLikert = question.type === "multiple_choice" && 
+                     question.options && 
+                     question.options.length === 5 && 
+                     question.options[0] === "Strongly Disagree";
+
+    if (isLikert) {
+      return (
+        <div className="mt-4">
+          {/* Desktop View */}
+          <div className="hidden sm:flex rounded-lg overflow-hidden border border-border/60 shadow-sm divide-x divide-border/60 bg-muted/5">
+            {question.options.map((option, idx) => {
+              const isSelected = value === option;
+              return (
+                <TooltipProvider key={idx}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        onClick={() => handleAnswerChange(question.id, option)}
+                        data-state={isSelected ? "checked" : "unchecked"}
+                        className={`flex-1 py-4 text-sm font-semibold transition-all duration-200 outline-none
+                          ${LIKERT_COLORS[idx]}
+                          ${!isSelected ? 'text-muted-foreground' : ''}
+                        `}
+                      >
+                        {LIKERT_SHORT[idx]}
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="font-medium">
+                      {option}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              );
+            })}
+          </div>
+          
+          {/* Mobile View */}
+          <div className="flex flex-col sm:hidden gap-2 mt-4">
+            {question.options.map((option, idx) => {
+              const isSelected = value === option;
+              return (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => handleAnswerChange(question.id, option)}
+                  data-state={isSelected ? "checked" : "unchecked"}
+                  className={`w-full py-3 px-4 rounded-lg text-sm font-semibold text-left transition-all border border-border/60 shadow-sm
+                    ${LIKERT_COLORS[idx]}
+                    ${!isSelected ? 'bg-card text-foreground' : ''}
+                  `}
+                >
+                  {option}
+                </button>
+              );
+            })}
+          </div>
+          <div className="flex justify-between mt-3 text-xs text-muted-foreground font-medium px-1 sm:hidden">
+            <span>Strongly Disagree</span>
+            <span>Strongly Agree</span>
+          </div>
+        </div>
+      );
+    }
+
     switch (question.type) {
       case "text":
         return (
           <Textarea 
-            placeholder="Type your answer here..."
+            placeholder="Type your detailed answer here..."
             value={value || ""}
             onChange={(e) => handleAnswerChange(question.id, e.target.value)}
-            className="min-h-[100px] resize-y"
+            className="min-h-[120px] resize-y mt-4 text-base bg-background/50 focus:bg-background transition-colors"
           />
         );
       
       case "yes_no":
         return (
-          <RadioGroup 
-            value={value} 
-            onValueChange={(val) => handleAnswerChange(question.id, val)}
-            className="flex flex-col space-y-2"
-          >
-            <div className="flex items-center space-x-2 border rounded-md p-3 hover:bg-muted/50 cursor-pointer transition-colors" onClick={() => handleAnswerChange(question.id, "Yes")}>
-              <RadioGroupItem value="Yes" id={`q${question.id}-yes`} />
-              <Label htmlFor={`q${question.id}-yes`} className="flex-1 cursor-pointer">Yes</Label>
-            </div>
-            <div className="flex items-center space-x-2 border rounded-md p-3 hover:bg-muted/50 cursor-pointer transition-colors" onClick={() => handleAnswerChange(question.id, "No")}>
-              <RadioGroupItem value="No" id={`q${question.id}-no`} />
-              <Label htmlFor={`q${question.id}-no`} className="flex-1 cursor-pointer">No</Label>
-            </div>
-          </RadioGroup>
+          <div className="grid grid-cols-2 gap-4 mt-4">
+            {["Yes", "No"].map((opt) => (
+              <button
+                key={opt}
+                type="button"
+                onClick={() => handleAnswerChange(question.id, opt)}
+                className={`py-4 px-6 rounded-xl border-2 transition-all font-semibold text-lg flex items-center justify-center
+                  ${value === opt 
+                    ? 'border-primary bg-primary/5 text-primary shadow-sm' 
+                    : 'border-border/60 hover:border-primary/30 hover:bg-muted/30 text-muted-foreground'
+                  }
+                `}
+              >
+                {opt}
+              </button>
+            ))}
+          </div>
         );
 
       case "multiple_choice":
-        // For simplicity, we'll use checkboxes if the user can select multiple, 
-        // but the DB schema just says options string[]. 
-        // Let's assume radio for single choice unless we explicitly know it's multi.
-        // We will default to single choice radio for multiple_choice.
         return (
-          <RadioGroup 
-            value={value} 
-            onValueChange={(val) => handleAnswerChange(question.id, val)}
-            className="flex flex-col space-y-2"
-          >
-            {question.options?.map((option, idx) => (
-              <div 
-                key={idx} 
-                className="flex items-center space-x-2 border rounded-md p-3 hover:bg-muted/50 cursor-pointer transition-colors"
-                onClick={() => handleAnswerChange(question.id, option)}
-              >
-                <RadioGroupItem value={option} id={`q${question.id}-opt${idx}`} />
-                <Label htmlFor={`q${question.id}-opt${idx}`} className="flex-1 cursor-pointer">{option}</Label>
-              </div>
-            ))}
-          </RadioGroup>
+          <div className="space-y-3 mt-4">
+            {question.options?.map((option, idx) => {
+              const isSelected = value === option;
+              return (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => handleAnswerChange(question.id, option)}
+                  className={`w-full flex items-center p-4 rounded-xl border-2 transition-all text-left group
+                    ${isSelected 
+                      ? 'border-primary bg-primary/5 shadow-sm' 
+                      : 'border-border/40 hover:border-primary/30 hover:bg-muted/20 bg-card'
+                    }
+                  `}
+                >
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center mr-4 transition-colors
+                    ${isSelected ? 'border-primary' : 'border-muted-foreground/40 group-hover:border-primary/50'}
+                  `}>
+                    {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
+                  </div>
+                  <span className={`text-base font-medium ${isSelected ? 'text-foreground' : 'text-muted-foreground group-hover:text-foreground'}`}>
+                    {option}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         );
 
       case "rating":
         const ratingVal = value ? parseInt(value, 10) : 0;
         return (
-          <div className="pt-6 pb-2 px-2">
+          <div className="pt-8 pb-4 px-2 mt-2 bg-muted/10 rounded-xl border border-border/40 px-6">
             <Slider 
               value={[ratingVal]} 
               min={1} 
               max={10} 
               step={1}
               onValueChange={(vals) => handleAnswerChange(question.id, vals[0].toString())}
-              className="mb-6"
+              className="mb-8"
             />
-            <div className="flex justify-between text-xs text-muted-foreground font-medium">
-              <span>1 (Lowest)</span>
-              <span className="text-primary font-bold text-sm bg-primary/10 px-2 py-0.5 rounded">{ratingVal || '-'}</span>
-              <span>10 (Highest)</span>
+            <div className="flex justify-between items-center text-sm font-medium">
+              <span className="text-muted-foreground">1 - Lowest</span>
+              <span className="w-12 h-12 flex items-center justify-center text-xl font-bold bg-primary text-primary-foreground rounded-full shadow-md">
+                {ratingVal || '-'}
+              </span>
+              <span className="text-muted-foreground">10 - Highest</span>
             </div>
           </div>
         );
 
       default:
-        return <p className="text-sm text-muted-foreground">Unsupported question type</p>;
+        return <p className="text-sm text-muted-foreground mt-4">Unsupported question format</p>;
     }
   };
 
+  if (!currentSection) return null;
+
   return (
     <Layout>
-      <div className="max-w-2xl mx-auto space-y-8 mt-4 mb-16">
-        <div className="space-y-4">
-          <h1 className="text-3xl font-serif font-semibold text-primary tracking-tight">{survey.title}</h1>
-          {survey.description && (
-            <p className="text-lg text-muted-foreground leading-relaxed">
-              {survey.description}
-            </p>
-          )}
-        </div>
-
-        <div className="sticky top-16 z-40 bg-background/95 backdrop-blur py-4 border-b">
-          <div className="flex justify-between text-sm font-medium mb-2">
-            <span className="text-muted-foreground">Progress</span>
-            <span className="text-primary">{progress}%</span>
+      <div className="max-w-4xl mx-auto space-y-10 mt-6 mb-24">
+        
+        {/* Header & Global Progress */}
+        <div className="space-y-6">
+          <h1 className="text-4xl font-serif font-bold text-foreground tracking-tight">{survey.title}</h1>
+          
+          <div className="p-5 rounded-2xl bg-muted/30 border border-border/50">
+            <div className="flex justify-between text-sm font-semibold mb-3">
+              <span className="text-muted-foreground uppercase tracking-wider text-xs">Overall Progress</span>
+              <span className="text-primary">{overallProgress}%</span>
+            </div>
+            <Progress value={overallProgress} className="h-2" />
           </div>
-          <Progress value={progress} className="h-2" />
         </div>
 
-        <div className="space-y-8 mt-8">
-          {questions.map((q, index) => (
-            <Card key={q.id} className="border-border/50 shadow-sm overflow-hidden" id={`question-${q.id}`}>
-              <CardHeader className="bg-muted/20 border-b border-border/50 pb-4">
-                <div className="flex gap-3">
-                  <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-semibold mt-0.5">
-                    {index + 1}
-                  </span>
-                  <div className="space-y-1">
-                    <CardTitle className="text-lg leading-snug font-medium text-foreground">
-                      {q.text}
-                      {q.isRequired && <span className="text-destructive ml-1" title="Required">*</span>}
-                    </CardTitle>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-6 pb-6">
-                {renderQuestionInput(q)}
-              </CardContent>
-            </Card>
-          ))}
+        {/* Section Stepper */}
+        <div className="flex flex-wrap gap-2 py-4">
+          {sections.map((sec, idx) => {
+            const isPast = idx < currentSectionIndex;
+            const isCurrent = idx === currentSectionIndex;
+            return (
+              <div 
+                key={sec.title} 
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all
+                  ${isCurrent ? 'bg-primary text-primary-foreground shadow-md' : 
+                    isPast ? 'bg-primary/10 text-primary border border-primary/20' : 
+                    'bg-muted/50 text-muted-foreground border border-border/50'}
+                `}
+              >
+                Step {idx + 1}: {sec.title.replace(/^Section [A-Z]:\s*/i, '')}
+              </div>
+            );
+          })}
         </div>
 
-        <div className="pt-4 flex justify-end border-t mt-12">
-          <Button 
-            size="lg" 
-            onClick={handleSubmit} 
-            disabled={isSubmitting || questions.length === 0}
-            className="w-full sm:w-auto px-8"
+        {/* Current Section Container */}
+        <AnimatePresence mode="wait">
+          <motion.div 
+            key={currentSectionIndex}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.4, ease: "easeInOut" }}
+            className="space-y-8"
           >
-            {isSubmitting ? "Submitting..." : "Submit Response"}
-          </Button>
+            <div className="space-y-3 pb-4 border-b-2 border-border">
+              <h2 className="text-3xl font-serif font-semibold text-foreground">
+                {currentSection.title}
+              </h2>
+              {currentSection.description && (
+                <p className="text-lg text-muted-foreground leading-relaxed">
+                  {currentSection.description}
+                </p>
+              )}
+              <div className="text-sm font-medium text-muted-foreground pt-2">
+                {sectionAnsweredCount} of {sectionQuestions.length} questions answered in this section
+              </div>
+            </div>
+
+            <div className="space-y-10">
+              {sectionQuestions.map((q) => (
+                <div key={q.id} id={`question-${q.id}`} className="scroll-mt-32">
+                  <div className="space-y-2 mb-2">
+                    <h3 className="text-xl font-medium text-foreground leading-snug">
+                      <span className="text-primary/70 mr-2 font-serif font-bold">
+                        {/* Try to extract prefix if it exists like "B1." */}
+                        {q.text.match(/^[A-Z0-9]+\./) ? '' : ''}
+                      </span>
+                      {q.text}
+                      {q.isRequired && <span className="text-destructive ml-2 font-bold" title="Required">*</span>}
+                    </h3>
+                  </div>
+                  {renderQuestionInput(q)}
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        </AnimatePresence>
+
+        {/* Sticky Bottom Navigation */}
+        <div className="fixed bottom-0 left-0 right-0 z-40 bg-background/80 backdrop-blur-xl border-t border-border shadow-[0_-10px_40px_rgba(0,0,0,0.05)] dark:shadow-[0_-10px_40px_rgba(0,0,0,0.2)]">
+          <div className="max-w-4xl mx-auto p-4 sm:p-6 flex justify-between items-center">
+            <Button 
+              variant="outline" 
+              size="lg" 
+              onClick={handlePrevSection} 
+              disabled={currentSectionIndex === 0 || isSubmitting}
+              className="px-6 rounded-full font-semibold"
+            >
+              <ChevronLeft className="w-5 h-5 mr-2" />
+              Previous
+            </Button>
+            
+            <Button 
+              size="lg" 
+              onClick={handleNextSection} 
+              disabled={isSubmitting || sectionQuestions.length === 0}
+              className="px-8 rounded-full font-semibold shadow-md text-base"
+            >
+              {currentSectionIndex === totalSections - 1 ? (
+                isSubmitting ? "Submitting..." : "Submit Response"
+              ) : (
+                <>Next Section <ChevronRight className="w-5 h-5 ml-2" /></>
+              )}
+            </Button>
+          </div>
         </div>
       </div>
     </Layout>

@@ -21,6 +21,8 @@ export const questionsTable = pgTable("questions", {
   options: jsonb("options").$type<string[]>().notNull().default([]),
   isRequired: boolean("is_required").notNull().default(true),
   orderIndex: integer("order_index").notNull().default(0),
+  section: text("section"),
+  sectionDescription: text("section_description"),
 });
 
 export const responsesTable = pgTable("responses", {
