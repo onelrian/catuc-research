@@ -8,6 +8,12 @@ on:
     branches:
       - main
 
+# Required for Netlify action to update commit status and comments
+permissions:
+  contents: write
+  statuses: write
+  deployments: write
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -28,21 +34,16 @@ jobs:
       - name: Install Dependencies
         run: pnpm install --no-frozen-lockfile
 
-      - name: Verify Secrets
-        run: |
-          if [ -z "${{ secrets.NETLIFY_AUTH_TOKEN }}" ]; then echo "Error: NETLIFY_AUTH_TOKEN is not set"; exit 1; fi
-          if [ -z "${{ secrets.NETLIFY_SITE_ID }}" ]; then echo "Error: NETLIFY_SITE_ID is not set"; exit 1; fi
-
       - name: Build Project
         run: |
-          pnpm --filter @workspace/api-zod build
-          pnpm --filter @workspace/api-client-react build
-          pnpm --filter @workspace/resume-site build
+          # Only the resume-site has a build script
+          npx pnpm --filter @workspace/resume-site build
 
-      - name: Verify Build Output
+      - name: Database Push
         run: |
-          echo "Checking build directory..."
-          ls -R artifacts/resume-site/dist/public
+          npx pnpm --filter @workspace/db drizzle-kit push
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
       - name: Deploy to Netlify
         uses: nwtgck/actions-netlify@v3.0
@@ -50,10 +51,11 @@ jobs:
           publish-dir: artifacts/resume-site/dist/public
           production-deploy: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          enable-commit-comment: true
+          # Disable verbose comments to keep the log clean
+          enable-commit-comment: false
+          enable-pull-request-comment: false
+          enable-commit-status: true
           overwritable-pull-request-deploy-message: true
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-
-

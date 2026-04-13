@@ -17,18 +17,18 @@ const queryClient = new QueryClient();
 function ProtectedDashboard({ component: Component }: { component: React.ComponentType<any> }) {
   const { user, isLoading } = useAuth();
   const [, setLocation] = useLocation();
-  
-  const isAshley = user?.email?.toLowerCase().includes("ashley") || 
-                 user?.firstName?.toLowerCase().includes("ashley");
+  const isResearcher = user?.isAdmin || false;
 
   useEffect(() => {
-    if (!isLoading && !isAshley) {
+    if (!isLoading && !isResearcher) {
       setLocation("/");
     }
-  }, [isLoading, isAshley, setLocation]);
+  }, [isLoading, isResearcher, setLocation]);
+
 
   if (isLoading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
-  if (!isAshley) return null;
+  if (!isResearcher) return null;
+
 
   return <Component />;
 }

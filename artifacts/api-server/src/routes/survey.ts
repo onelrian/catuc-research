@@ -1,4 +1,5 @@
 import { Router, type Request, type Response, type NextFunction } from "express";
+import { checkIsAdmin } from "../lib/auth";
 import { db } from "@workspace/db";
 import {
   surveysTable,
@@ -13,18 +14,15 @@ import { eq, desc, sql, inArray, and } from "drizzle-orm";
 
 const router = Router();
 
-// Helper to check if the current user is Ashley (Admin)
+// Helper to check if the current user is an Admin
 function isAdmin(req: Request) {
-  if (!req.isAuthenticated()) return false;
-  const user = req.user;
-  return user.email?.toLowerCase().includes("ashley") || 
-         user.firstName?.toLowerCase().includes("ashley");
+  return req.isAuthenticated() && req.user.isAdmin;
 }
 
 // Middleware to restrict access to Ashley only
 function adminOnly(req: Request, res: Response, next: NextFunction): void | Response {
   if (!isAdmin(req)) {
-    return res.status(403).json({ error: "Access denied. Only Ashley can access this." });
+    return res.status(403).json({ error: "Access denied. Only authorized researchers can access this." });
   }
   return next();
 }

@@ -1,5 +1,6 @@
 [build]
-  command = "corepack enable pnpm && pnpm install --no-frozen-lockfile && pnpm run --filter @workspace/api-zod build && pnpm run --filter @workspace/api-client-react build && pnpm run --filter @workspace/resume-site build"
+  base = "artifacts/resume-site"
+  command = "cd ../.. && corepack enable pnpm && pnpm install --no-frozen-lockfile && pnpm run --filter @workspace/resume-site build"
   publish = "artifacts/resume-site/dist/public"
 
 [build.environment]
@@ -7,14 +8,17 @@
 
 [functions]
   directory = "artifacts/resume-site/netlify/functions"
+  node_bundler = "esbuild"
 
+# 1. API Redirect: Routes all /api/* requests to the Netlify Function
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/api/:splat"
   status = 200
+  force = true
 
+# 2. SPA routing: Ensures React Router works on page refreshes
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
-

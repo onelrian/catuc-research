@@ -51,3 +51,5 @@ Thumbs.db
 .env
 *.zip
 pnpm-lock.yaml
+questionnaire.docx
+attached_assets/

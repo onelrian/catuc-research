@@ -7,8 +7,6 @@ import { LogIn, LogOut, LayoutDashboard, Database } from "lucide-react";
 export function Layout({ children }: { children: React.ReactNode }) {
   const { user, isAuthenticated, login, logout, isLoading } = useAuth();
 
-  const isAshley = user?.email?.toLowerCase().includes("ashley") || 
-                 user?.firstName?.toLowerCase().includes("ashley");
 
   return (
     <div className="min-h-[100dvh] flex flex-col bg-background text-foreground transition-colors duration-200">
@@ -37,12 +35,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <Link href="/" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
               Surveys
             </Link>
-            {isAshley && (
+            {user?.isAdmin && (
               <Link href="/dashboard" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5">
                 <LayoutDashboard className="w-4 h-4" />
                 <span className="hidden sm:inline">Dashboard</span>
               </Link>
             )}
+
             
             <div className="h-6 w-[1px] bg-border mx-2 hidden sm:block"></div>
             
