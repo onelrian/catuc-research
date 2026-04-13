@@ -49,6 +49,7 @@ Set these on the Vercel project before production deploys:
 - `DATABASE_URL`: PostgreSQL connection string.
 - `GOOGLE_CLIENT_ID`: Google OAuth 2.0 Client ID.
 - `GOOGLE_CLIENT_SECRET`: Google OAuth 2.0 Client Secret.
+- `APP_ORIGIN`: The canonical production site origin used to build the Google OAuth callback URL.
 
 Example CLI commands:
 ```bash
@@ -56,6 +57,7 @@ vercel env add ADMIN_EMAILS production --value "admin@example.com" --yes
 vercel env add DATABASE_URL production --sensitive --value "postgresql://..." --yes
 vercel env add GOOGLE_CLIENT_ID production --sensitive --value "..." --yes
 vercel env add GOOGLE_CLIENT_SECRET production --sensitive --value "..." --yes
+vercel env add APP_ORIGIN production --value "https://catuc-research-platform-bamenda-o3lmslmyx-onelrians-projects.vercel.app" --yes
 ```
 
 ### Google Cloud Project Configuration
