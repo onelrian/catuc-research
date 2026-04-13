@@ -98,6 +98,9 @@ export default function Home() {
             <div className="p-8 text-center border rounded-xl bg-destructive/5 text-destructive border-destructive/20 shadow-sm">
               <p className="font-medium text-lg">System Error</p>
               <p className="mt-2 text-sm opacity-80">We encountered an error loading the available surveys. Please refresh the page.</p>
+              <div className="mt-4 p-2 bg-background/50 rounded text-xs font-mono break-all overflow-hidden border border-destructive/10">
+                {String(error)}
+              </div>
             </div>
           ) : activeSurveys.length === 0 ? (
             <div className="p-16 text-center border border-dashed rounded-xl bg-muted/20">
