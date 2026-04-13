@@ -10,6 +10,12 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: resume
+    description: Resume data
+  - name: views
+    description: Resume view tracking
+  - name: dashboard
+    description: Dashboard overview data
 paths:
   /healthz:
     get:
@@ -24,6 +30,88 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /resume:
+    get:
+      operationId: getResume
+      tags: [resume]
+      summary: Get resume data
+      description: Returns the full resume profile
+      responses:
+        "200":
+          description: Resume profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Resume"
+    put:
+      operationId: updateResume
+      tags: [resume]
+      summary: Update resume data
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResumeUpdate"
+      responses:
+        "200":
+          description: Updated resume
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Resume"
+
+  /views:
+    post:
+      operationId: recordView
+      tags: [views]
+      summary: Record a resume view
+      description: Logs a new view when someone opens the resume
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecordViewBody"
+      responses:
+        "201":
+          description: View recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/View"
+
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Get dashboard summary
+      description: Returns aggregated view statistics and overview metrics
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  /dashboard/recent-views:
+    get:
+      operationId: getRecentViews
+      tags: [dashboard]
+      summary: Get recent views
+      description: Returns last 20 resume views
+      responses:
+        "200":
+          description: Recent views list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/View"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +122,182 @@ components:
       required:
         - status
 
+    Resume:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        title:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        location:
+          type: string
+        summary:
+          type: string
+        linkedin:
+          type: string
+        website:
+          type: string
+        skills:
+          type: array
+          items:
+            type: string
+        experience:
+          type: array
+          items:
+            $ref: "#/components/schemas/Experience"
+        education:
+          type: array
+          items:
+            $ref: "#/components/schemas/Education"
+        certifications:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - name
+        - title
+        - email
+        - summary
+        - skills
+        - experience
+        - education
+        - certifications
+        - createdAt
+        - updatedAt
+
+    ResumeUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        title:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        location:
+          type: string
+        summary:
+          type: string
+        linkedin:
+          type: string
+        website:
+          type: string
+        skills:
+          type: array
+          items:
+            type: string
+        experience:
+          type: array
+          items:
+            $ref: "#/components/schemas/Experience"
+        education:
+          type: array
+          items:
+            $ref: "#/components/schemas/Education"
+        certifications:
+          type: array
+          items:
+            type: string
+
+    Experience:
+      type: object
+      properties:
+        company:
+          type: string
+        role:
+          type: string
+        startDate:
+          type: string
+        endDate:
+          type: string
+        description:
+          type: string
+        bullets:
+          type: array
+          items:
+            type: string
+      required:
+        - company
+        - role
+        - startDate
+        - description
+        - bullets
+
+    Education:
+      type: object
+      properties:
+        institution:
+          type: string
+        degree:
+          type: string
+        field:
+          type: string
+        startYear:
+          type: integer
+        endYear:
+          type: integer
+        gpa:
+          type: string
+        honors:
+          type: string
+      required:
+        - institution
+        - degree
+        - field
+        - startYear
+
+    View:
+      type: object
+      properties:
+        id:
+          type: integer
+        referrer:
+          type: string
+        viewedAt:
+          type: string
+        ipHash:
+          type: string
+      required:
+        - id
+        - viewedAt
+
+    RecordViewBody:
+      type: object
+      properties:
+        referrer:
+          type: string
+
+    DashboardSummary:
+      type: object
+      properties:
+        totalViews:
+          type: integer
+        viewsToday:
+          type: integer
+        viewsThisWeek:
+          type: integer
+        viewsThisMonth:
+          type: integer
+        uniqueReferrers:
+          type: integer
+        lastViewedAt:
+          type: string
+      required:
+        - totalViews
+        - viewsToday
+        - viewsThisWeek
+        - viewsThisMonth
+        - uniqueReferrers

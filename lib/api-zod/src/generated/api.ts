@@ -14,3 +14,155 @@ import * as zod from "zod";
 export const HealthCheckResponse = zod.object({
   status: zod.string(),
 });
+
+/**
+ * Returns the full resume profile
+ * @summary Get resume data
+ */
+export const GetResumeResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  title: zod.string(),
+  email: zod.string(),
+  phone: zod.string().optional(),
+  location: zod.string().optional(),
+  summary: zod.string(),
+  linkedin: zod.string().optional(),
+  website: zod.string().optional(),
+  skills: zod.array(zod.string()),
+  experience: zod.array(
+    zod.object({
+      company: zod.string(),
+      role: zod.string(),
+      startDate: zod.string(),
+      endDate: zod.string().optional(),
+      description: zod.string(),
+      bullets: zod.array(zod.string()),
+    }),
+  ),
+  education: zod.array(
+    zod.object({
+      institution: zod.string(),
+      degree: zod.string(),
+      field: zod.string(),
+      startYear: zod.number(),
+      endYear: zod.number().optional(),
+      gpa: zod.string().optional(),
+      honors: zod.string().optional(),
+    }),
+  ),
+  certifications: zod.array(zod.string()),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+});
+
+/**
+ * @summary Update resume data
+ */
+export const UpdateResumeBody = zod.object({
+  name: zod.string().optional(),
+  title: zod.string().optional(),
+  email: zod.string().optional(),
+  phone: zod.string().optional(),
+  location: zod.string().optional(),
+  summary: zod.string().optional(),
+  linkedin: zod.string().optional(),
+  website: zod.string().optional(),
+  skills: zod.array(zod.string()).optional(),
+  experience: zod
+    .array(
+      zod.object({
+        company: zod.string(),
+        role: zod.string(),
+        startDate: zod.string(),
+        endDate: zod.string().optional(),
+        description: zod.string(),
+        bullets: zod.array(zod.string()),
+      }),
+    )
+    .optional(),
+  education: zod
+    .array(
+      zod.object({
+        institution: zod.string(),
+        degree: zod.string(),
+        field: zod.string(),
+        startYear: zod.number(),
+        endYear: zod.number().optional(),
+        gpa: zod.string().optional(),
+        honors: zod.string().optional(),
+      }),
+    )
+    .optional(),
+  certifications: zod.array(zod.string()).optional(),
+});
+
+export const UpdateResumeResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  title: zod.string(),
+  email: zod.string(),
+  phone: zod.string().optional(),
+  location: zod.string().optional(),
+  summary: zod.string(),
+  linkedin: zod.string().optional(),
+  website: zod.string().optional(),
+  skills: zod.array(zod.string()),
+  experience: zod.array(
+    zod.object({
+      company: zod.string(),
+      role: zod.string(),
+      startDate: zod.string(),
+      endDate: zod.string().optional(),
+      description: zod.string(),
+      bullets: zod.array(zod.string()),
+    }),
+  ),
+  education: zod.array(
+    zod.object({
+      institution: zod.string(),
+      degree: zod.string(),
+      field: zod.string(),
+      startYear: zod.number(),
+      endYear: zod.number().optional(),
+      gpa: zod.string().optional(),
+      honors: zod.string().optional(),
+    }),
+  ),
+  certifications: zod.array(zod.string()),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+});
+
+/**
+ * Logs a new view when someone opens the resume
+ * @summary Record a resume view
+ */
+export const RecordViewBody = zod.object({
+  referrer: zod.string().optional(),
+});
+
+/**
+ * Returns aggregated view statistics and overview metrics
+ * @summary Get dashboard summary
+ */
+export const GetDashboardSummaryResponse = zod.object({
+  totalViews: zod.number(),
+  viewsToday: zod.number(),
+  viewsThisWeek: zod.number(),
+  viewsThisMonth: zod.number(),
+  uniqueReferrers: zod.number(),
+  lastViewedAt: zod.string().optional(),
+});
+
+/**
+ * Returns last 20 resume views
+ * @summary Get recent views
+ */
+export const GetRecentViewsResponseItem = zod.object({
+  id: zod.number(),
+  referrer: zod.string().optional(),
+  viewedAt: zod.string(),
+  ipHash: zod.string().optional(),
+});
+export const GetRecentViewsResponse = zod.array(GetRecentViewsResponseItem);

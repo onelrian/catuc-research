@@ -5,18 +5,28 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import type {
+  MutationFunction,
   QueryFunction,
   QueryKey,
+  UseMutationOptions,
+  UseMutationResult,
   UseQueryOptions,
   UseQueryResult,
 } from "@tanstack/react-query";
 
-import type { HealthStatus } from "./api.schemas";
+import type {
+  DashboardSummary,
+  HealthStatus,
+  RecordViewBody,
+  Resume,
+  ResumeUpdate,
+  View,
+} from "./api.schemas";
 
 import { customFetch } from "../custom-fetch";
-import type { ErrorType } from "../custom-fetch";
+import type { ErrorType, BodyType } from "../custom-fetch";
 
 type AwaitedInput<T> = PromiseLike<T> | T;
 
@@ -92,6 +102,397 @@ export function useHealthCheck<
   request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getHealthCheckQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * Returns the full resume profile
+ * @summary Get resume data
+ */
+export const getGetResumeUrl = () => {
+  return `/api/resume`;
+};
+
+export const getResume = async (options?: RequestInit): Promise<Resume> => {
+  return customFetch<Resume>(getGetResumeUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetResumeQueryKey = () => {
+  return [`/api/resume`] as const;
+};
+
+export const getGetResumeQueryOptions = <
+  TData = Awaited<ReturnType<typeof getResume>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof getResume>>, TError, TData>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetResumeQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getResume>>> = ({
+    signal,
+  }) => getResume({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getResume>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetResumeQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getResume>>
+>;
+export type GetResumeQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get resume data
+ */
+
+export function useGetResume<
+  TData = Awaited<ReturnType<typeof getResume>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof getResume>>, TError, TData>;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetResumeQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Update resume data
+ */
+export const getUpdateResumeUrl = () => {
+  return `/api/resume`;
+};
+
+export const updateResume = async (
+  resumeUpdate: ResumeUpdate,
+  options?: RequestInit,
+): Promise<Resume> => {
+  return customFetch<Resume>(getUpdateResumeUrl(), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(resumeUpdate),
+  });
+};
+
+export const getUpdateResumeMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateResume>>,
+    TError,
+    { data: BodyType<ResumeUpdate> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateResume>>,
+  TError,
+  { data: BodyType<ResumeUpdate> },
+  TContext
+> => {
+  const mutationKey = ["updateResume"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateResume>>,
+    { data: BodyType<ResumeUpdate> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return updateResume(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateResumeMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateResume>>
+>;
+export type UpdateResumeMutationBody = BodyType<ResumeUpdate>;
+export type UpdateResumeMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Update resume data
+ */
+export const useUpdateResume = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateResume>>,
+    TError,
+    { data: BodyType<ResumeUpdate> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateResume>>,
+  TError,
+  { data: BodyType<ResumeUpdate> },
+  TContext
+> => {
+  return useMutation(getUpdateResumeMutationOptions(options));
+};
+
+/**
+ * Logs a new view when someone opens the resume
+ * @summary Record a resume view
+ */
+export const getRecordViewUrl = () => {
+  return `/api/views`;
+};
+
+export const recordView = async (
+  recordViewBody: RecordViewBody,
+  options?: RequestInit,
+): Promise<View> => {
+  return customFetch<View>(getRecordViewUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(recordViewBody),
+  });
+};
+
+export const getRecordViewMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof recordView>>,
+    TError,
+    { data: BodyType<RecordViewBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof recordView>>,
+  TError,
+  { data: BodyType<RecordViewBody> },
+  TContext
+> => {
+  const mutationKey = ["recordView"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof recordView>>,
+    { data: BodyType<RecordViewBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return recordView(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RecordViewMutationResult = NonNullable<
+  Awaited<ReturnType<typeof recordView>>
+>;
+export type RecordViewMutationBody = BodyType<RecordViewBody>;
+export type RecordViewMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Record a resume view
+ */
+export const useRecordView = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof recordView>>,
+    TError,
+    { data: BodyType<RecordViewBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof recordView>>,
+  TError,
+  { data: BodyType<RecordViewBody> },
+  TContext
+> => {
+  return useMutation(getRecordViewMutationOptions(options));
+};
+
+/**
+ * Returns aggregated view statistics and overview metrics
+ * @summary Get dashboard summary
+ */
+export const getGetDashboardSummaryUrl = () => {
+  return `/api/dashboard/summary`;
+};
+
+export const getDashboardSummary = async (
+  options?: RequestInit,
+): Promise<DashboardSummary> => {
+  return customFetch<DashboardSummary>(getGetDashboardSummaryUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetDashboardSummaryQueryKey = () => {
+  return [`/api/dashboard/summary`] as const;
+};
+
+export const getGetDashboardSummaryQueryOptions = <
+  TData = Awaited<ReturnType<typeof getDashboardSummary>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getDashboardSummary>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetDashboardSummaryQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getDashboardSummary>>
+  > = ({ signal }) => getDashboardSummary({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getDashboardSummary>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetDashboardSummaryQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getDashboardSummary>>
+>;
+export type GetDashboardSummaryQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get dashboard summary
+ */
+
+export function useGetDashboardSummary<
+  TData = Awaited<ReturnType<typeof getDashboardSummary>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getDashboardSummary>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetDashboardSummaryQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * Returns last 20 resume views
+ * @summary Get recent views
+ */
+export const getGetRecentViewsUrl = () => {
+  return `/api/dashboard/recent-views`;
+};
+
+export const getRecentViews = async (
+  options?: RequestInit,
+): Promise<View[]> => {
+  return customFetch<View[]>(getGetRecentViewsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetRecentViewsQueryKey = () => {
+  return [`/api/dashboard/recent-views`] as const;
+};
+
+export const getGetRecentViewsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getRecentViews>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getRecentViews>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetRecentViewsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getRecentViews>>> = ({
+    signal,
+  }) => getRecentViews({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getRecentViews>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetRecentViewsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getRecentViews>>
+>;
+export type GetRecentViewsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get recent views
+ */
+
+export function useGetRecentViews<
+  TData = Awaited<ReturnType<typeof getRecentViews>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getRecentViews>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetRecentViewsQueryOptions(options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

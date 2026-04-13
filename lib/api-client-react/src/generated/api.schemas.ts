@@ -8,3 +8,75 @@
 export interface HealthStatus {
   status: string;
 }
+
+export interface Experience {
+  company: string;
+  role: string;
+  startDate: string;
+  endDate?: string;
+  description: string;
+  bullets: string[];
+}
+
+export interface Education {
+  institution: string;
+  degree: string;
+  field: string;
+  startYear: number;
+  endYear?: number;
+  gpa?: string;
+  honors?: string;
+}
+
+export interface Resume {
+  id: number;
+  name: string;
+  title: string;
+  email: string;
+  phone?: string;
+  location?: string;
+  summary: string;
+  linkedin?: string;
+  website?: string;
+  skills: string[];
+  experience: Experience[];
+  education: Education[];
+  certifications: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ResumeUpdate {
+  name?: string;
+  title?: string;
+  email?: string;
+  phone?: string;
+  location?: string;
+  summary?: string;
+  linkedin?: string;
+  website?: string;
+  skills?: string[];
+  experience?: Experience[];
+  education?: Education[];
+  certifications?: string[];
+}
+
+export interface View {
+  id: number;
+  referrer?: string;
+  viewedAt: string;
+  ipHash?: string;
+}
+
+export interface RecordViewBody {
+  referrer?: string;
+}
+
+export interface DashboardSummary {
+  totalViews: number;
+  viewsToday: number;
+  viewsThisWeek: number;
+  viewsThisMonth: number;
+  uniqueReferrers: number;
+  lastViewedAt?: string;
+}

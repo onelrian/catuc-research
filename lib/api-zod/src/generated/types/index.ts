@@ -6,4 +6,11 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from "./dashboardSummary";
+export * from "./education";
+export * from "./experience";
 export * from "./healthStatus";
+export * from "./recordViewBody";
+export * from "./resume";
+export * from "./resumeUpdate";
+export * from "./view";
