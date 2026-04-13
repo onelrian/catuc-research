@@ -1,61 +1,42 @@
-# CATUC Bamenda Research Platform
+# CATUC Bamenda Research Survey Platform
 
-A secure, professional academic research survey platform for the Catholic University of Cameroon, Bamenda (CATUC). Designed for the Department of Business and Management Sciences to collect validated student data and drive institutional research.
+An institutional research platform developed for the Catholic University of Cameroon, Bamenda (CATUC). This platform facilitates secure data collection for academic studies within the Department of Business and Management Sciences.
 
-## 🚀 Key Features
+## Overview
 
-- **Secure Research Environment**: Mandatory identification via Google OAuth2 ensuring data integrity.
-- **Academic Dashboard**: High-fidelity dashboard for researchers (restricted to authorized personnel).
-- **Survey Management**: Create, edit, and track active research studies.
-- **Duplication Prevention**: Automatic linking of responses to verified user IDs to prevent multiple submissions.
-- **Responsive Architecture**: Fully mobile-optimized interface for student accessibility.
+The platform is designed to provide a professional and secure environment for conducting academic research. It ensures data integrity through mandatory user identification and provides researchers with a high-fidelity dashboard for study management and data analysis.
 
-## 🛠 Tech Stack
+## Technical Architecture
 
-- **Frontend**: React, Vite, Tailwind CSS, Framer Motion, Lucide Icons.
-- **Backend**: Node.js (Express), Drizzle ORM.
-- **Database**: PostgreSQL.
-- **Authentication**: OpenID Connect (OIDC) via Google OAuth 2.0.
-- **API Spec**: OpenAPI (Swagger) with automated TypeScript client generation.
+### Core Technologies
+- **Frontend**: React-based single-page application (SPA) utilizing Vite for build optimization.
+- **Backend**: Node.js and Express.js RESTful API.
+- **Database**: PostgreSQL with Drizzle ORM for type-safe database interactions.
+- **Authentication**: Google OAuth 2.0 (OpenID Connect) for participant verification.
+- **Styling**: Tailwind CSS with customized typography and academic color palettes.
 
-## 📦 Project Structure
+### Project Structure
+- `artifacts/resume-site`: Frontend application source code.
+- `artifacts/api-server`: Backend server logic and API endpoints.
+- `lib/db`: Database schema definitions and migration configurations.
+- `lib/auth-web`: Shared authentication hooks and state management.
+- `lib/api-spec`: OpenAPI 3.0 specifications and client generation configuration.
 
-- `artifacts/resume-site`: The React frontend application.
-- `artifacts/api-server`: The Express backend server.
-- `lib/db`: Database schema and connection logic.
-- `lib/auth-web`: Frontend authentication hook and state management.
-- `lib/api-spec`: OpenAPI specifications and Orval configuration.
+## Deployment Specifications
 
-## ⚙️ Google OAuth Setup (Production Mode)
+### Frontend Deployment (Netlify)
+The frontend is configured for deployment as a static site. The included `netlify.toml` file manages the build process and handles Single Page Application (SPA) routing. It also includes proxy configuration for API requests to avoid cross-origin issues.
 
-To use the platform without restricted "Test Users", follow these steps in the [Google Cloud Console](https://console.cloud.google.com/):
+### Backend Deployment
+The API server requires a Node.js environment and a persistent PostgreSQL database. It should be deployed to a service that supports long-running processes (e.g., Railway, Fly.io, or an AWS EC2 instance).
 
-1. **OAuth Consent Screen**:
-   - Set **User Type** to **External**.
-   - Fill in **App Information** (Name, Email, Logo).
-   - Add **Authorized Domains** (e.g., `netlify.app`).
-2. **Publish App**:
-   - Transitions the app from "Testing" to "Production" status.
-   - For internal/academic use, you generally don't need Full Verification unless you want to remove the "Unverified App" warning for thousands of users.
-3. **Credentials**:
-   - Create an **OAuth 2.0 Client ID** (Web application).
-   - Add **Authorized Redirect URIs**: `https://your-api-server.com/api/callback`.
-   - Copy the `Client ID` and `Client Secret` to your server environment variables.
+## Security and Data Integrity
 
-## 🌐 Deployment
+All survey responses are linked to verified participant identities. The system includes logic to prevent duplicate submissions, ensuring that research data remains valid and reliable. Administrative access to the research dashboard is restricted to authorized personnel via role-based access control.
 
-### Netlify (Frontend)
-The frontend is pre-configured for Netlify via `netlify.toml`.
-1. Connect your GitHub repository to Netlify.
-2. The build command is automated to build all monorepo dependencies.
-3. **Environment Variables**:
-   - Ensure `BASE_PATH` is set to `/`. (Already handled in build command).
+## Administrative Access
 
-### Replit (Backend)
-The backend can be deployed on Replit for persistent hosting.
-1. Ensure `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` are set in "Secrets".
-2. Set `DATABASE_URL` to your PostgreSQL instance.
-3. Run `npm run dev` to start the server.
+Access to the researcher dashboard is restricted based on identity claims provided during the Google OAuth flow. Only accounts designated as administrative (e.g., "Ashley") are permitted to view results or modify research instruments.
 
-## 📝 License
-Proprietary for CATUC Bamenda Research Team.
+---
+© 2026 The Catholic University of Cameroon, Bamenda. Department of Business and Management Sciences.
