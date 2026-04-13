@@ -18,7 +18,9 @@
     "pino-http": "^10",
     "openid-client": "^6.8.2",
     "cookie-parser": "^1.4.7",
-    "drizzle-orm": "catalog:"
+    "drizzle-orm": "catalog:",
+    "@workspace/db": "workspace:*",
+    "@workspace/api-zod": "workspace:*"
   },
   "devDependencies": {
     "@hookform/resolvers": "^3.10.0",
