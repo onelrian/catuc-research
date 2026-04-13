@@ -24,6 +24,21 @@ async function buildAll() {
       js: BANNER,
     },
   });
+
+  // Build a reusable app bundle for serverless entrypoints.
+  await esbuild({
+    entryPoints: [path.resolve(artifactDir, "src/app.ts")],
+    platform: "node",
+    bundle: true,
+    format: "esm",
+    outfile: path.resolve(distDir, "app.mjs"),
+    logLevel: "info",
+    external: EXTERNAL_PACKAGES,
+    sourcemap: "linked",
+    banner: {
+      js: BANNER,
+    },
+  });
 }
 
 const EXTERNAL_PACKAGES = [

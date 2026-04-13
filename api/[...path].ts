@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import app from "../artifacts/api-server/src/app";
+import app from "../artifacts/api-server/dist/app.mjs";
 
 function normalizeApiPath(url: string | undefined): string | undefined {
   if (!url) return url;
@@ -12,10 +12,5 @@ export default function handler(
   res: ServerResponse,
 ) {
   req.url = normalizeApiPath(req.url);
-  const requestHandler = app as unknown as (
-    req: IncomingMessage & { url?: string | undefined },
-    res: ServerResponse,
-  ) => unknown;
-
-  return requestHandler(req, res);
+  return app(req as never, res as never);
 }
