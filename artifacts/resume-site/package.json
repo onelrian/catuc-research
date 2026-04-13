@@ -12,15 +12,16 @@
   "dependencies": {
     "@workspace/api-server": "workspace:*",
     "serverless-http": "^3.2.0",
-    "express": "^5",
-    "cors": "^2",
-    "pino": "^9",
-    "pino-http": "^10",
+    "express": "^5.0.0",
+    "cors": "^2.8.5",
+    "pino": "^9.0.0",
+    "pino-http": "^10.0.0",
     "openid-client": "^6.8.2",
     "cookie-parser": "^1.4.7",
     "drizzle-orm": "catalog:",
     "@workspace/db": "workspace:*",
-    "@workspace/api-zod": "workspace:*"
+    "@workspace/api-zod": "workspace:*",
+    "@neondatabase/serverless": "^0.10.4"
   },
   "devDependencies": {
     "@hookform/resolvers": "^3.10.0",
