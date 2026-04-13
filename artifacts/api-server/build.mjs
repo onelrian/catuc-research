@@ -42,7 +42,8 @@ async function buildAll() {
     platform: "node",
     bundle: true,
     format: "esm",
-    outfile: path.resolve(netlifyDistDir, "api.mjs"),
+    outdir: netlifyDistDir,
+    outExtension: { ".js": ".mjs" },
     logLevel: "info",
     // In standalone mode, we bundle EVERYTHING except Node.js built-ins.
     // This solves the "Cannot find package" issue.
