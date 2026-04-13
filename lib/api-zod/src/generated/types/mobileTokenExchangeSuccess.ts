@@ -6,9 +6,6 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface ResponseRecord {
-  id: number;
-  surveyId: number;
-  userId?: string;
-  submittedAt: string;
+export interface MobileTokenExchangeSuccess {
+  token: string;
 }

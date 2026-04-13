@@ -30,11 +30,40 @@ const LIKERT_COLORS = [
   "hover:bg-emerald-100 dark:hover:bg-emerald-950/50 data-[state=checked]:bg-emerald-700 data-[state=checked]:text-white data-[state=checked]:border-emerald-700",
 ];
 
+import { useAuth } from "@workspace/auth-web";
+
 export default function SurveyPage() {
   const { surveyId } = useParams<{ surveyId: string }>();
   const id = parseInt(surveyId || "0", 10);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { user, isAuthenticated, isLoading: isAuthLoading, login } = useAuth();
+
+  if (isAuthLoading) {
+    return (
+      <Layout>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="animate-pulse text-muted-foreground font-serif">Verifying identity...</div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <Layout>
+        <div className="max-w-xl mx-auto text-center py-20 px-8 border rounded-2xl bg-muted/20 mt-12 shadow-sm">
+          <h2 className="text-2xl font-serif font-semibold mb-4 text-foreground">Identity Verification</h2>
+          <p className="text-lg text-muted-foreground mb-10 max-w-sm mx-auto leading-relaxed">
+            Please log in to participate. This ensures data integrity and helps us prevent duplicate submissions.
+          </p>
+          <Button size="lg" onClick={login} className="px-10 py-6 text-lg rounded-full shadow-lg hover:shadow-primary/20 transition-all font-semibold">
+            Log In to Begin
+          </Button>
+        </div>
+      </Layout>
+    );
+  }
 
   const { data: survey, isLoading, error } = useGetSurvey(id, {
     query: {

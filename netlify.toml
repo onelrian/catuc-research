@@ -1,0 +1,15 @@
+[build]
+  base = "artifacts/resume-site"
+  command = "cd ../.. && npx pnpm install && npx pnpm run --filter @workspace/api-zod build && npx pnpm run --filter @workspace/api-client-react build && PORT=5173 BASE_PATH=/ npx pnpm run --filter @workspace/resume-site build"
+  publish = "artifacts/resume-site/dist/public"
+
+[build.environment]
+  NODE_VERSION = "20"
+  PORT = "5173"
+  BASE_PATH = "/"
+
+# SPA routing — all paths serve index.html
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

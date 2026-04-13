@@ -33,7 +33,7 @@ export default function Home() {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="text-5xl sm:text-6xl font-serif font-bold tracking-tight text-foreground"
           >
-            Advance Academic Knowledge
+            Academic Research
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0, y: 20 }}
@@ -41,7 +41,7 @@ export default function Home() {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="text-xl text-muted-foreground leading-relaxed"
           >
-            Welcome to the CATUC Bamenda flagship research platform. Your participation in these studies directly contributes to institutional research in Business and Management Sciences.
+            Welcome to CATUC Bamenda. Participate in active studies to advance understanding in Business and Management Sciences.
           </motion.p>
         </section>
 

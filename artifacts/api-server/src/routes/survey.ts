@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, type Request, type Response, type NextFunction } from "express";
 import { db } from "@workspace/db";
 import {
   surveysTable,
@@ -9,9 +9,25 @@ import {
   updateSurveySchema,
   submitResponseSchema,
 } from "@workspace/db";
-import { eq, desc, sql, inArray } from "drizzle-orm";
+import { eq, desc, sql, inArray, and } from "drizzle-orm";
 
 const router = Router();
+
+// Helper to check if the current user is Ashley (Admin)
+function isAdmin(req: Request) {
+  if (!req.isAuthenticated()) return false;
+  const user = req.user;
+  return user.email?.toLowerCase().includes("ashley") || 
+         user.firstName?.toLowerCase().includes("ashley");
+}
+
+// Middleware to restrict access to Ashley only
+function adminOnly(req: Request, res: Response, next: NextFunction): void | Response {
+  if (!isAdmin(req)) {
+    return res.status(403).json({ error: "Access denied. Only Ashley can access this." });
+  }
+  return next();
+}
 
 router.get("/surveys", async (req, res) => {
   try {
@@ -43,7 +59,7 @@ router.get("/surveys", async (req, res) => {
   }
 });
 
-router.post("/surveys", async (req, res) => {
+router.post("/surveys", adminOnly, async (req, res) => {
   try {
     const parsed = createSurveySchema.safeParse(req.body);
     if (!parsed.success) {
@@ -108,9 +124,9 @@ router.get("/surveys/:surveyId", async (req, res) => {
   }
 });
 
-router.put("/surveys/:surveyId", async (req, res) => {
+router.put("/surveys/:surveyId", adminOnly, async (req, res) => {
   try {
-    const id = parseInt(req.params.surveyId);
+    const id = parseInt(req.params.surveyId as string);
     if (isNaN(id)) return res.status(400).json({ error: "Invalid survey ID" });
 
     const parsed = updateSurveySchema.safeParse(req.body);
@@ -159,9 +175,9 @@ router.put("/surveys/:surveyId", async (req, res) => {
   }
 });
 
-router.delete("/surveys/:surveyId", async (req, res) => {
+router.delete("/surveys/:surveyId", adminOnly, async (req, res) => {
   try {
-    const id = parseInt(req.params.surveyId);
+    const id = parseInt(req.params.surveyId as string);
     if (isNaN(id)) return res.status(400).json({ error: "Invalid survey ID" });
     await db.delete(surveysTable).where(eq(surveysTable.id, id));
     return res.status(204).send();
@@ -173,8 +189,24 @@ router.delete("/surveys/:surveyId", async (req, res) => {
 
 router.post("/surveys/:surveyId/responses", async (req, res) => {
   try {
-    const surveyId = parseInt(req.params.surveyId);
+    const surveyId = parseInt(req.params.surveyId as string);
     if (isNaN(surveyId)) return res.status(400).json({ error: "Invalid survey ID" });
+
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Please log in to participate in the study" });
+    }
+
+    const userId = req.user.id;
+
+    // Check for duplicate response
+    const existing = await db
+      .select()
+      .from(responsesTable)
+      .where(and(eq(responsesTable.surveyId, surveyId), eq(responsesTable.userId, userId)));
+    
+    if (existing.length > 0) {
+      return res.status(400).json({ error: "You have already participated in this study" });
+    }
 
     const surveyRows = await db.select().from(surveysTable).where(eq(surveysTable.id, surveyId));
     if (surveyRows.length === 0) return res.status(404).json({ error: "Survey not found" });
@@ -182,7 +214,7 @@ router.post("/surveys/:surveyId/responses", async (req, res) => {
     const parsed = submitResponseSchema.safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ error: "Invalid request body" });
 
-    const [response] = await db.insert(responsesTable).values({ surveyId }).returning();
+    const [response] = await db.insert(responsesTable).values({ surveyId, userId }).returning();
 
     if (parsed.data.answers.length > 0) {
       await db.insert(answersTable).values(
@@ -206,9 +238,9 @@ router.post("/surveys/:surveyId/responses", async (req, res) => {
   }
 });
 
-router.get("/surveys/:surveyId/results", async (req, res) => {
+router.get("/surveys/:surveyId/results", adminOnly, async (req, res) => {
   try {
-    const surveyId = parseInt(req.params.surveyId);
+    const surveyId = parseInt(req.params.surveyId as string);
     if (isNaN(surveyId)) return res.status(400).json({ error: "Invalid survey ID" });
 
     const surveyRows = await db.select().from(surveysTable).where(eq(surveysTable.id, surveyId));
@@ -301,9 +333,9 @@ router.get("/surveys/:surveyId/results", async (req, res) => {
   }
 });
 
-router.get("/surveys/:surveyId/responses/raw", async (req, res) => {
+router.get("/surveys/:surveyId/responses/raw", adminOnly, async (req, res) => {
   try {
-    const surveyId = parseInt(req.params.surveyId);
+    const surveyId = parseInt(req.params.surveyId as string);
     if (isNaN(surveyId)) return res.status(400).json({ error: "Invalid survey ID" });
 
     const responses = await db
@@ -347,7 +379,7 @@ router.get("/surveys/:surveyId/responses/raw", async (req, res) => {
   }
 });
 
-router.get("/dashboard/overview", async (req, res) => {
+router.get("/dashboard/overview", adminOnly, async (req, res) => {
   try {
     const [totalSurveys] = await db
       .select({ count: sql<number>`cast(count(*) as int)` })
@@ -409,3 +441,4 @@ router.get("/dashboard/overview", async (req, res) => {
 });
 
 export default router;
+
