@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -342,13 +343,12 @@ export function SurveyForm({ survey, initialIsAuthenticated }: { survey: any; in
         return <p className="text-sm text-muted-foreground mt-4">Unsupported question format</p>;
     }
   };
-
   if (!isAuthenticated) {
     return (
       <div className="max-w-2xl mx-auto text-center py-24 px-8 mt-12 bg-muted/20 border rounded-2xl">
         <h2 className="text-3xl font-serif font-bold mb-4">Authentication Required</h2>
         <p className="text-muted-foreground mb-8">Please sign in with your Google account to participate in this study. This ensures the integrity of our research data.</p>
-        <Button onClick={() => router.push("/")} size="lg" className="rounded-full px-8">
+        <Button onClick={() => signIn("google")} size="lg" className="rounded-full px-8">
           Sign In to Participate
         </Button>
       </div>
