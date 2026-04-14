@@ -9,7 +9,7 @@ export default auth((req) => {
     return NextResponse.redirect(new URL("/", req.nextUrl));
   }
 
-  // Admin/Researcher protection for dashboard and API
+  // Admin/Researcher protection for dashboard
   const isAdmin = (req.auth?.user as any)?.isAdmin;
   if (isDashboard && !isAdmin) {
     return NextResponse.redirect(new URL("/", req.nextUrl));
@@ -19,5 +19,5 @@ export default auth((req) => {
 });
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/api/((?!auth).*)"],
+  matcher: ["/dashboard/:path*"],
 };

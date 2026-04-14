@@ -2,18 +2,22 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { questionsTable, responsesTable, answersTable } from "@/lib/schema";
 import { eq, inArray } from "drizzle-orm";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export const GET = auth(async (req, context) => {
+export const dynamic = "force-dynamic";
+
+export async function GET(
+  _request: NextRequest,
+  { params }: { params: Promise<{ surveyId: string }> }
+) {
   // Check auth and admin role
-  if (!req.auth || !(req.auth.user as any)?.isAdmin) {
+  const session = await auth();
+  if (!session || !(session.user as any)?.isAdmin) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Next.js 15: Handle async params from context
-  const params = await (context as any).params;
-  const surveyIdStr = params?.surveyId;
-  const id = parseInt(surveyIdStr, 10);
+  const { surveyId } = await params;
+  const id = parseInt(surveyId, 10);
   
   if (isNaN(id)) return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
 
@@ -61,4 +65,4 @@ export const GET = auth(async (req, context) => {
       "Content-Disposition": `attachment; filename="survey-results-${id}.csv"`,
     },
   });
-}) as any;
+}

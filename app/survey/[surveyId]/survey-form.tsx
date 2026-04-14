@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -23,15 +22,36 @@ const LIKERT_COLORS = [
   "hover:bg-emerald-100 dark:hover:bg-emerald-950/50 data-[state=checked]:bg-emerald-700 data-[state=checked]:text-white data-[state=checked]:border-emerald-700",
 ];
 
+/**
+ * Generate or retrieve a persistent anonymous ID from localStorage.
+ * Used to prevent duplicate submissions from the same browser.
+ */
+function getAnonymousId(): string {
+  const STORAGE_KEY = "catuc_anonymous_id";
+  if (typeof window === "undefined") return "";
+  let id = localStorage.getItem(STORAGE_KEY);
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem(STORAGE_KEY, id);
+  }
+  return id;
+}
+
 export function SurveyForm({ survey, initialIsAuthenticated }: { survey: any; initialIsAuthenticated: boolean }) {
   const router = useRouter();
   const { toast } = useToast();
-  
-  const isAuthenticated = initialIsAuthenticated; 
 
   const [answers, setAnswers] = useState<Record<number, any>>({});
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
+  const anonymousIdRef = useRef<string>("");
+
+  useEffect(() => {
+    // Generate/retrieve anonymous ID on mount (client-side only)
+    if (!initialIsAuthenticated) {
+      anonymousIdRef.current = getAnonymousId();
+    }
+  }, [initialIsAuthenticated]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -152,7 +172,10 @@ export function SurveyForm({ survey, initialIsAuthenticated }: { survey: any; in
 
     console.log("Submitting survey response...", { surveyId: survey.id, answers: formattedAnswers });
     
-    const result = await submitSurveyResponse(survey.id, { answers: formattedAnswers });
+    const result = await submitSurveyResponse(survey.id, {
+      answers: formattedAnswers,
+      anonymousId: initialIsAuthenticated ? undefined : anonymousIdRef.current,
+    });
     
     if (result.success) {
       setIsSubmitted(true);
@@ -343,17 +366,7 @@ export function SurveyForm({ survey, initialIsAuthenticated }: { survey: any; in
         return <p className="text-sm text-muted-foreground mt-4">Unsupported question format</p>;
     }
   };
-  if (!isAuthenticated) {
-    return (
-      <div className="max-w-2xl mx-auto text-center py-24 px-8 mt-12 bg-muted/20 border rounded-2xl">
-        <h2 className="text-3xl font-serif font-bold mb-4">Authentication Required</h2>
-        <p className="text-muted-foreground mb-8">Please sign in with your Google account to participate in this study. This ensures the integrity of our research data.</p>
-        <Button onClick={() => signIn("google")} size="lg" className="rounded-full px-8">
-          Sign In to Participate
-        </Button>
-      </div>
-    );
-  }
+  // Login is optional — no auth gate here
 
   if (!currentSection) return null;
 

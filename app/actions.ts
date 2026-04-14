@@ -15,17 +15,22 @@ import { auth } from "@/lib/auth";
 
 /**
  * Submit a survey response.
- * Requires an authenticated user session.
- * Prevents multiple submissions by the same user for the same survey.
+ * Works for both authenticated users and anonymous participants.
+ * Prevents multiple submissions using userId (logged in) or anonymousId (anonymous).
  */
-export async function submitSurveyResponse(surveyId: number, data: { answers: any[] }) {
+export async function submitSurveyResponse(
+  surveyId: number,
+  data: { answers: any[]; anonymousId?: string }
+) {
   try {
     const session = await auth();
-    if (!session?.user?.id) {
-      return { success: false, error: "Please sign in to participate in the study." };
-    }
+    const userId = session?.user?.id ?? null;
+    const anonymousId = data.anonymousId ?? null;
 
-    const userId = session.user.id;
+    // Must have at least one identifier
+    if (!userId && !anonymousId) {
+      return { success: false, error: "Unable to identify participant. Please try again." };
+    }
 
     // Validate input payload
     const parsed = submitResponseSchema.safeParse(data);
@@ -35,31 +40,45 @@ export async function submitSurveyResponse(surveyId: number, data: { answers: an
 
     const { answers } = parsed.data;
 
-    // Step 1: Check for duplicate response
-    const existing = await db
-      .select()
-      .from(responsesTable)
-      .where(
-        and(
-          eq(responsesTable.surveyId, surveyId),
-          eq(responsesTable.userId, userId)
-        )
-      );
+    // Check for duplicate response
+    let existing: any[] = [];
+    if (userId) {
+      existing = await db
+        .select()
+        .from(responsesTable)
+        .where(
+          and(
+            eq(responsesTable.surveyId, surveyId),
+            eq(responsesTable.userId, userId)
+          )
+        );
+    } else if (anonymousId) {
+      existing = await db
+        .select()
+        .from(responsesTable)
+        .where(
+          and(
+            eq(responsesTable.surveyId, surveyId),
+            eq(responsesTable.anonymousId, anonymousId)
+          )
+        );
+    }
     
     if (existing.length > 0) {
       return { success: false, error: "You have already participated in this study." };
     }
 
-    // Step 2: Insert the response record
+    // Insert the response record
     const [newResponse] = await db
       .insert(responsesTable)
       .values({
         surveyId,
         userId,
+        anonymousId,
       })
       .returning({ id: responsesTable.id });
 
-    // Step 3: Insert answers
+    // Insert answers
     if (answers.length > 0) {
       await db.insert(answersTable).values(
         answers.map((ans) => ({

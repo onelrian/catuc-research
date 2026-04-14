@@ -59,7 +59,8 @@ CREATE TABLE "questions" (
 CREATE TABLE "responses" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"survey_id" integer NOT NULL,
-	"user_id" varchar NOT NULL,
+	"user_id" varchar,
+	"anonymous_id" text,
 	"submitted_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
@@ -78,5 +79,4 @@ ALTER TABLE "answers" ADD CONSTRAINT "answers_response_id_responses_id_fk" FOREI
 ALTER TABLE "answers" ADD CONSTRAINT "answers_question_id_questions_id_fk" FOREIGN KEY ("question_id") REFERENCES "public"."questions"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "questions" ADD CONSTRAINT "questions_survey_id_surveys_id_fk" FOREIGN KEY ("survey_id") REFERENCES "public"."surveys"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "responses" ADD CONSTRAINT "responses_survey_id_surveys_id_fk" FOREIGN KEY ("survey_id") REFERENCES "public"."surveys"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "responses" ADD CONSTRAINT "responses_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-CREATE UNIQUE INDEX "responses_survey_user_unique" ON "responses" USING btree ("survey_id","user_id");
+ALTER TABLE "responses" ADD CONSTRAINT "responses_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE no action;
