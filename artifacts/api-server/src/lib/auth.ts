@@ -81,16 +81,24 @@ export async function createSession(data: SessionData): Promise<string> {
 }
 
 export async function getSession(sid: string): Promise<SessionData | null> {
+  console.log(`[Auth DB] Fetching session for SID: ${sid.slice(0, 8)}...`);
   const [row] = await db
     .select()
     .from(sessionsTable)
     .where(eq(sessionsTable.sid, sid));
 
-  if (!row || row.expire < new Date()) {
-    if (row) await deleteSession(sid);
+  if (!row) {
+    console.warn(`[Auth DB] No session row found for SID: ${sid.slice(0, 8)}...`);
     return null;
   }
 
+  if (row.expire < new Date()) {
+    console.warn(`[Auth DB] Session expired for SID: ${sid.slice(0, 8)}... (Expired at: ${row.expire.toISOString()}, Current time: ${new Date().toISOString()})`);
+    await deleteSession(sid);
+    return null;
+  }
+
+  console.log(`[Auth DB] Session found and active for user: ${row.sess ? (row.sess as any).user?.email : "unknown"}`);
   return row.sess as unknown as SessionData;
 }
 

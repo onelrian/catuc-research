@@ -64,12 +64,14 @@ export async function authMiddleware(
 
   const sid = getSessionId(req);
   if (!sid) {
+    console.log(`[Auth Middleware] No SID found in request headers/cookies`);
     next();
     return;
   }
 
   const session = await getSession(sid);
   if (!session?.user?.id) {
+    console.warn(`[Auth Middleware] Session not found or invalid for SID: ${sid.slice(0, 8)}...`);
     await clearSession(res, sid);
     next();
     return;
@@ -77,11 +79,13 @@ export async function authMiddleware(
 
   const refreshed = await refreshIfExpired(sid, session);
   if (!refreshed) {
+    console.warn(`[Auth Middleware] Session refresh failed for SID: ${sid.slice(0, 8)}...`);
     await clearSession(res, sid);
     next();
     return;
   }
 
+  console.log(`[Auth Middleware] Authenticated user: ${refreshed.user.email} (SID: ${sid.slice(0, 8)}...)`);
   req.user = refreshed.user;
   next();
 }
