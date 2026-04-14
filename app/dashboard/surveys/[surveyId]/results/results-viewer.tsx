@@ -17,7 +17,6 @@ import {
   PieChart,
   Pie,
   Cell,
-  Legend,
   RadarChart,
   PolarGrid,
   PolarAngleAxis,
@@ -326,7 +325,7 @@ function QuestionCard({ qr }: { qr: any }) {
   const isText = qr.questionType === "text";
 
   return (
-    <Card className="overflow-hidden rounded-2xl border-border/60 shadow-sm bg-card">
+    <Card className="rounded-2xl border-border/60 shadow-sm bg-card">
       <CardHeader className="bg-muted/10 border-b border-border/40 pb-5">
         <div className="flex justify-between gap-4 items-start">
           <CardTitle className="text-lg font-medium leading-relaxed">
@@ -345,7 +344,7 @@ function QuestionCard({ qr }: { qr: any }) {
           </div>
         </div>
       </CardHeader>
-      <CardContent className="p-6">
+      <CardContent className="p-6 pb-8">
         {/* Rating Questions: Horizontal bar chart */}
         {isRating && <RatingChart qr={qr} />}
 
@@ -359,7 +358,7 @@ function QuestionCard({ qr }: { qr: any }) {
           <div className="space-y-3">
             {qr.textAnswers.map((text: string, i: number) => (
               <div key={i} className="p-4 rounded-xl bg-muted/20 border border-border/40 text-sm text-foreground leading-relaxed">
-                "{text}"
+                {text}
               </div>
             ))}
           </div>
@@ -460,7 +459,7 @@ function ChoiceChart({ qr, isYesNo }: { qr: any; isYesNo: boolean }) {
   const colors = isYesNo ? YES_NO_COLORS : DEMO_COLORS;
 
   return (
-    <div className="flex flex-col md:flex-row items-center gap-8">
+    <div className="flex flex-col md:flex-row items-center gap-6">
       <div className="h-[260px] w-[260px] shrink-0">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
@@ -469,13 +468,11 @@ function ChoiceChart({ qr, isYesNo }: { qr: any; isYesNo: boolean }) {
               cx="50%"
               cy="50%"
               innerRadius={isYesNo ? 60 : 0}
-              outerRadius={110}
+              outerRadius={100}
               paddingAngle={pieData.length > 1 ? 3 : 0}
               dataKey="value"
               stroke="hsl(var(--card))"
               strokeWidth={2}
-              label={({ name, percent }) => pieData.length <= 6 ? `${(percent * 100).toFixed(0)}%` : ''}
-              labelLine={false}
             >
               {pieData.map((_, index) => (
                 <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
