@@ -95,6 +95,12 @@ router.get("/auth/user", (req: Request, res: Response) => {
 });
 
 router.get("/login", async (req: Request, res: Response) => {
+  if (req.isAuthenticated()) {
+    const returnTo = getSafeReturnTo(req.query.returnTo);
+    req.log.info({ returnTo }, "User already authenticated, skipping login");
+    return res.redirect(returnTo);
+  }
+
   const config = await getOidcConfig();
   const callbackUrl = `${getOrigin(req)}/api/callback`;
 
