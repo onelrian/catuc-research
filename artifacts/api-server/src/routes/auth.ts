@@ -82,14 +82,20 @@ router.get("/auth/user", (req: Request, res: Response) => {
   res.setHeader("Pragma", "no-cache");
   res.setHeader("Vary", "Cookie");
 
+  const authenticated = req.isAuthenticated();
+  const userId = req.user?.id ?? null;
+  const email = req.user?.email ?? null;
+
+  console.log(`[Auth Route] User lookup: authenticated=${authenticated}, email=${email}, userId=${userId}`);
+  
   req.log.info(
-    { authenticated: req.isAuthenticated(), userId: req.user?.id ?? null },
+    { authenticated, userId },
     "Auth user lookup",
   );
 
   res.json(
     GetCurrentAuthUserResponse.parse({
-      user: req.isAuthenticated() ? req.user : null,
+      user: authenticated ? req.user : null,
     }),
   );
 });
