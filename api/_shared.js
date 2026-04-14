@@ -1,4 +1,4 @@
-function buildApiUrl(req) {
+function buildApiUrl(req, basePath = "") {
   const query = req.query || {};
 
   // Vercel passes catch-all segments in req.query.path (array) or req.query["...path"]
@@ -9,19 +9,17 @@ function buildApiUrl(req) {
     ? [rawPath]
     : [];
 
-  // Strip internal Vercel routing params from the query string
+  // Rebuild query string without internal Vercel routing params
   const parsedUrl = new URL(req.url || "/", "http://localhost");
   parsedUrl.searchParams.delete("path");
   parsedUrl.searchParams.delete("...path");
 
-  // Express is mounted at /api, so we must produce /api/<segments>
-  const pathname =
-    pathSegments.length > 0 ? `/api/${pathSegments.join("/")}` : "/api";
+  // Build pathname: /api/<basePath>/<catch-all segments>
+  const parts = ["api", basePath, ...pathSegments].filter(Boolean);
+  const pathname = "/" + parts.join("/");
 
   const rebuilt = `${pathname}${parsedUrl.search}`;
-  console.log(
-    `[Vercel Shim] ${req.method} ${req.url} -> Express: ${rebuilt}`
-  );
+  console.log(`[Vercel Shim] ${req.method} ${req.url} -> Express: ${rebuilt}`);
   return rebuilt;
 }
 
@@ -36,9 +34,9 @@ async function getApp() {
   return appPromise;
 }
 
-function createHandler() {
+function createHandler(basePath = "") {
   return async function handler(req, res) {
-    req.url = buildApiUrl(req);
+    req.url = buildApiUrl(req, basePath);
     const app = await getApp();
     return new Promise((resolve, reject) => {
       res.on("finish", resolve);

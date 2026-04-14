@@ -1,2 +1,2 @@
 const { createHandler } = require("../_shared.js");
-module.exports = createHandler();
+module.exports = createHandler("surveys");
