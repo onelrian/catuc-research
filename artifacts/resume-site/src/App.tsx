@@ -17,18 +17,25 @@ const queryClient = new QueryClient();
 function ProtectedDashboard({ component: Component }: { component: React.ComponentType<any> }) {
   const { user, isLoading } = useAuth();
   const [, setLocation] = useLocation();
-  const isResearcher = user?.isAdmin || false;
 
   useEffect(() => {
-    if (!isLoading && !isResearcher) {
+    // Only redirect once we're certain auth has resolved and user is not admin
+    if (!isLoading && !user?.isAdmin) {
       setLocation("/");
     }
-  }, [isLoading, isResearcher, setLocation]);
+  }, [isLoading, user?.isAdmin, setLocation]);
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-muted-foreground">
+        Loading...
+      </div>
+    );
+  }
 
-  if (isLoading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
-  if (!isResearcher) return null;
-
+  if (!user?.isAdmin) {
+    return null; // redirect is in-flight via useEffect
+  }
 
   return <Component />;
 }

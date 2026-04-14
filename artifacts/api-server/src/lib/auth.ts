@@ -51,9 +51,12 @@ export interface SessionData {
 }
 
 let oidcConfig: client.Configuration | null = null;
+let lastDiscoveryTime = 0;
+const DISCOVERY_TTL = 12 * 60 * 60 * 1000; // 12 hours
 
 export async function getOidcConfig(): Promise<client.Configuration> {
-  if (!oidcConfig) {
+  const now = Date.now();
+  if (!oidcConfig || now - lastDiscoveryTime > DISCOVERY_TTL) {
     const clientId = process.env.GOOGLE_CLIENT_ID;
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
 
@@ -61,11 +64,13 @@ export async function getOidcConfig(): Promise<client.Configuration> {
       throw new Error("GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET must be set");
     }
 
+    console.log("[Auth] Fetching OIDC discovery document...");
     oidcConfig = await client.discovery(
       new URL(ISSUER_URL),
       clientId,
       clientSecret,
     );
+    lastDiscoveryTime = now;
   }
   return oidcConfig;
 }
