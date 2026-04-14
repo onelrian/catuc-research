@@ -62,6 +62,10 @@ attached_assets/
 aws-exports.*
 
 # Build and local context
-.next/
-.neon/
+.next
+.neon
 .codex
+.agents/
+.zencoder/
+.zenflow/
+*.tsbuildinfo

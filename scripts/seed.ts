@@ -1,5 +1,5 @@
-import { db } from "./db";
-import { surveysTable, questionsTable, responsesTable, answersTable, usersTable, accountsTable, sessionsTable } from "./schema";
+import { db } from "../lib/db";
+import { surveysTable, questionsTable, responsesTable, answersTable, usersTable, accountsTable, sessionsTable } from "../lib/schema";
 import { eq, sql } from "drizzle-orm";
 
 async function seed() {
