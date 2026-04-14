@@ -138,6 +138,8 @@ router.get("/callback", async (req: Request, res: Response) => {
   req.log.info(
     {
       callbackUrl,
+      rawCookies: req.headers.cookie,
+      parsedCookies: req.cookies,
       hasCookies: !!(codeVerifier && expectedState),
       hasCodeVerifier: !!codeVerifier,
       hasState: !!expectedState,
@@ -150,7 +152,11 @@ router.get("/callback", async (req: Request, res: Response) => {
 
   if (!codeVerifier || !expectedState) {
     req.log.warn(
-      { hasCodeVerifier: !!codeVerifier, hasState: !!expectedState },
+      { 
+        hasCodeVerifier: !!codeVerifier, 
+        hasState: !!expectedState,
+        availableCookies: Object.keys(req.cookies || {})
+      },
       "Auth callback missing OIDC cookies — possible cookie domain mismatch or direct URL access",
     );
     clearOidcCookies(res);
@@ -159,9 +165,10 @@ router.get("/callback", async (req: Request, res: Response) => {
   }
 
   const currentUrl = new URL(
-    `${callbackUrl}?${new URL(req.url, `http://${req.headers.host}`).searchParams}`,
+    `${callbackUrl}?${new URL(req.url, `http://${req.headers.host || "localhost"}`).searchParams}`,
   );
 
+  console.log(`[Auth Debug] constructed currentUrl: ${currentUrl.href}`);
   req.log.info({ currentUrl: currentUrl.href }, "Auth callback currentUrl constructed");
 
   let tokens: oidc.TokenEndpointResponse & oidc.TokenEndpointResponseHelpers;

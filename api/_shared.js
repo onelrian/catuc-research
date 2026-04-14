@@ -17,9 +17,24 @@ async function getApp() {
 
 function createHandler(basePath = "") {
   return async function handler(req, res) {
-    req.url = buildApiUrl(req, basePath);
     const app = await getApp();
-    return app(req, res);
+    const originalUrl = req.url;
+    req.url = buildApiUrl(req, basePath);
+    
+    console.log(`[Vercel API] ${req.method} ${originalUrl} -> Express path: ${req.url}`);
+    
+    // Ensure the lambda stays alive until Express finishes the response
+    return new Promise((resolve, reject) => {
+      res.on("finish", () => {
+        console.log(`[Vercel API] Response finished with ${res.statusCode}`);
+        resolve();
+      });
+      res.on("error", (err) => {
+        console.error(`[Vercel API] Response error:`, err);
+        reject(err);
+      });
+      app(req, res);
+    });
   };
 }
 
