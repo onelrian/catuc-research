@@ -1,5 +1,10 @@
 function buildApiUrl(req) {
   const currentUrl = new URL(req.url || "/", "http://localhost");
+  
+  // Strip Vercel-internal catch-all parameters that pollute the redirect URI
+  currentUrl.searchParams.delete("...path");
+  currentUrl.searchParams.delete("path");
+  
   return `${currentUrl.pathname}${currentUrl.search}`;
 }
 
