@@ -19,6 +19,7 @@ import {
   useSubmitResponse,
   Question,
 } from "@workspace/api-client-react";
+import { useAuth } from "@workspace/auth-web";
 
 const LIKERT_OPTIONS = ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"];
 const LIKERT_SHORT = ["SD", "D", "N", "A", "SA"];
@@ -29,8 +30,6 @@ const LIKERT_COLORS = [
   "hover:bg-emerald-100 dark:hover:bg-emerald-950/50 data-[state=checked]:bg-emerald-500 data-[state=checked]:text-white data-[state=checked]:border-emerald-500",
   "hover:bg-emerald-100 dark:hover:bg-emerald-950/50 data-[state=checked]:bg-emerald-700 data-[state=checked]:text-white data-[state=checked]:border-emerald-700",
 ];
-
-import { useAuth } from "@workspace/auth-web";
 
 export default function SurveyPage() {
   const { surveyId } = useParams<{ surveyId: string }>();
@@ -55,6 +54,31 @@ export default function SurveyPage() {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [currentSectionIndex]);
+
+  // ── All hooks MUST be called before any conditional returns ──
+  const sections = useMemo(() => {
+    if (!survey?.questions) return [];
+    
+    const sectionMap = new Map<string, { title: string, description?: string, questions: Question[] }>();
+    
+    // Group by section
+    survey.questions.forEach((q) => {
+      const secTitle = q.section || "General";
+      if (!sectionMap.has(secTitle)) {
+        sectionMap.set(secTitle, {
+          title: secTitle,
+          description: q.sectionDescription,
+          questions: []
+        });
+      }
+      sectionMap.get(secTitle)!.questions.push(q);
+    });
+
+    // Convert to array and preserve a sensible order
+    return Array.from(sectionMap.values());
+  }, [survey]);
+
+  // ── Conditional returns (safe — all hooks have been called above) ──
 
   if (isAuthLoading) {
     return (
@@ -81,28 +105,6 @@ export default function SurveyPage() {
       </Layout>
     );
   }
-
-  const sections = useMemo(() => {
-    if (!survey?.questions) return [];
-    
-    const sectionMap = new Map<string, { title: string, description?: string, questions: Question[] }>();
-    
-    // Group by section
-    survey.questions.forEach((q) => {
-      const secTitle = q.section || "General";
-      if (!sectionMap.has(secTitle)) {
-        sectionMap.set(secTitle, {
-          title: secTitle,
-          description: q.sectionDescription,
-          questions: []
-        });
-      }
-      sectionMap.get(secTitle)!.questions.push(q);
-    });
-
-    // Convert to array and preserve a sensible order
-    return Array.from(sectionMap.values());
-  }, [survey]);
 
   if (isNaN(id)) {
     return (
