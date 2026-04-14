@@ -23,10 +23,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   }) as any,
   providers: [
     Google({
-      clientId: process.env.AUTH_GOOGLE_ID,
-      clientSecret: process.env.AUTH_GOOGLE_SECRET,
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     }),
   ],
+  secret: process.env.AUTH_SECRET,
   callbacks: {
     async signIn({ user }) {
       if (user.email) {
@@ -50,8 +51,5 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
       return session;
     },
-  },
-  pages: {
-    signIn: "/",
   },
 });
