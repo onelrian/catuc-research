@@ -259,7 +259,9 @@ export default function SurveyPage() {
       },
       onError: (err: any) => {
         console.error("Submission failed:", err);
-        const errorMessage = err?.response?.data?.error || "There was a problem submitting your response. Please try again.";
+        // Extract error message from the custom ApiError class or fallback
+        const errorMessage = err?.data?.error || err?.message || "There was a problem submitting your response. Please try again.";
+        
         toast({
           title: "Submission Error",
           description: errorMessage,
