@@ -69,3 +69,4 @@ aws-exports.*
 .zencoder/
 .zenflow/
 *.tsbuildinfo
+.env*.local
