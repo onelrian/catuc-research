@@ -12,7 +12,7 @@ import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, CheckCircle2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, CheckCircle2, Minus, Plus } from "lucide-react";
 import {
   useGetSurvey,
   getGetSurveyQueryKey,
@@ -246,18 +246,23 @@ export default function SurveyPage() {
       return { questionId: id, value: String(val) };
     });
 
+    console.log("Submitting survey response...", { surveyId: survey.id, answers: formattedAnswers });
+
     submitResponse({
       surveyId: survey.id,
       data: { answers: formattedAnswers }
     }, {
       onSuccess: () => {
+        console.log("Submission successful");
         setIsSubmitted(true);
         window.scrollTo(0, 0);
       },
-      onError: () => {
+      onError: (err: any) => {
+        console.error("Submission failed:", err);
+        const errorMessage = err?.response?.data?.error || "There was a problem submitting your response. Please try again.";
         toast({
           title: "Submission Error",
-          description: "There was a problem submitting your response. Please try again.",
+          description: errorMessage,
           variant: "destructive"
         });
       }
@@ -400,19 +405,47 @@ export default function SurveyPage() {
         const ratingVal = value ? parseInt(value, 10) : 0;
         return (
           <div className="pt-8 pb-4 px-2 mt-2 bg-muted/10 rounded-xl border border-border/40 px-6">
-            <Slider 
-              value={[ratingVal]} 
-              min={1} 
-              max={10} 
-              step={1}
-              onValueChange={(vals) => handleAnswerChange(question.id, vals[0].toString())}
-              className="mb-8"
-            />
+            <div className="flex items-center gap-4 mb-8">
+              <Button
+                variant="outline"
+                size="icon"
+                className="rounded-full shrink-0 h-10 w-10 border-border/40 hover:bg-background"
+                onClick={() => handleAnswerChange(question.id, Math.max(1, ratingVal - 1).toString())}
+                disabled={ratingVal <= 1 && !!ratingVal}
+              >
+                <Minus className="h-4 w-4" />
+              </Button>
+              
+              <Slider 
+                value={[ratingVal || 5]} 
+                min={1} 
+                max={10} 
+                step={1}
+                onValueChange={(vals) => handleAnswerChange(question.id, vals[0].toString())}
+                className="flex-1"
+              />
+
+              <Button
+                variant="outline"
+                size="icon"
+                className="rounded-full shrink-0 h-10 w-10 border-border/40 hover:bg-background"
+                onClick={() => handleAnswerChange(question.id, Math.min(10, (ratingVal || 5) + 1).toString())}
+                disabled={ratingVal >= 10}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+            
             <div className="flex justify-between items-center text-sm font-medium">
               <span className="text-muted-foreground">1 - Lowest</span>
-              <span className="w-12 h-12 flex items-center justify-center text-xl font-bold bg-primary text-primary-foreground rounded-full shadow-md">
-                {ratingVal || '-'}
-              </span>
+              <div className="text-center">
+                <div className={`w-14 h-14 flex items-center justify-center text-2xl font-bold rounded-full shadow-lg ring-4 transition-all duration-200 scale-110 
+                  ${ratingVal ? 'bg-primary text-primary-foreground ring-primary/20' : 'bg-muted text-muted-foreground ring-muted/20'}
+                `}>
+                  {ratingVal || '-'}
+                </div>
+                {!ratingVal && <p className="text-[10px] text-primary mt-2 uppercase tracking-tighter font-bold animate-pulse">Select rating</p>}
+              </div>
               <span className="text-muted-foreground">10 - Highest</span>
             </div>
           </div>
