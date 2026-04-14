@@ -37,7 +37,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </Link>
           <nav className="flex items-center gap-4 sm:gap-6">
             <Link href="/" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-              Surveys
+              Studies
             </Link>
             {isAuthenticated && (user as any)?.isAdmin && (
               <Link href="/dashboard" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5">
@@ -73,7 +73,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       
       <footer className="border-t bg-muted/20 py-8 mt-12">
         <div className="container mx-auto px-4 sm:px-8 text-center text-sm text-muted-foreground">
-          <p>The Catholic University of Cameroon, Bamenda (CATUC)</p>
+          <p>© {new Date().getFullYear()} The Catholic University of Cameroon, Bamenda (CATUC)</p>
           <p className="mt-1">Department of Business and Management Sciences</p>
         </div>
       </footer>

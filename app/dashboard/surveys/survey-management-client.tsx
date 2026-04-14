@@ -207,7 +207,7 @@ export function SurveyManagementClient({ initialSurveys }: { initialSurveys: any
                             <SelectContent>
                               <SelectItem value="text">Qualitative (Text)</SelectItem>
                               <SelectItem value="multiple_choice">Multiple Choice</SelectItem>
-                              <SelectItem value="rating">Numeric Scale (1-10)</SelectItem>
+                              <SelectItem value="rating">Likert Scale (1–5)</SelectItem>
                               <SelectItem value="yes_no">Binary (Yes/No)</SelectItem>
                             </SelectContent>
                           </Select>

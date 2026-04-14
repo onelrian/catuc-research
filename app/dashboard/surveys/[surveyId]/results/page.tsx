@@ -81,7 +81,12 @@ export default async function SurveyResultsPage({
     surveyId: id,
     surveyTitle: survey.title,
     totalResponses,
-    completionRate: totalResponses > 0 ? 1.0 : 0,
+    completionRate: totalResponses > 0
+      ? responses.filter(r => {
+          const rAnswers = allAnswers.filter(a => a.responseId === r.id);
+          return rAnswers.length >= questions.length;
+        }).length / totalResponses
+      : 0,
     questionResults,
   };
 

@@ -3,17 +3,16 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
-import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, CheckCircle2, Minus, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, CheckCircle2, Loader2 } from "lucide-react";
 import { submitSurveyResponse } from "@/app/actions";
 
 const LIKERT_SHORT = ["SD", "D", "N", "A", "SA"];
+const LIKERT_FULL = ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"];
 const LIKERT_COLORS = [
   "hover:bg-rose-100 dark:hover:bg-rose-950/50 data-[state=checked]:bg-rose-500 data-[state=checked]:text-white data-[state=checked]:border-rose-500",
   "hover:bg-orange-100 dark:hover:bg-orange-950/50 data-[state=checked]:bg-orange-500 data-[state=checked]:text-white data-[state=checked]:border-orange-500",
@@ -43,6 +42,7 @@ export function SurveyForm({ survey, initialIsAuthenticated }: { survey: any; in
 
   const [answers, setAnswers] = useState<Record<number, any>>({});
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
   const anonymousIdRef = useRef<string>("");
 
@@ -89,10 +89,10 @@ export function SurveyForm({ survey, initialIsAuthenticated }: { survey: any; in
         </div>
         <h2 className="text-4xl font-serif font-bold text-foreground mb-6">Response Recorded</h2>
         <p className="text-xl text-muted-foreground mb-12 max-w-lg mx-auto leading-relaxed">
-          Your data has been successfully securely transmitted to the CATUC research database. Thank you for your contribution.
+          Your responses have been securely submitted to the CATUC research database. Thank you for your valuable contribution to this study.
         </p>
         <Button onClick={() => router.push("/")} size="lg" className="px-8 py-6 text-lg rounded-full">
-          Return to Directory
+          Return to Studies
         </Button>
       </motion.div>
     );
@@ -155,13 +155,14 @@ export function SurveyForm({ survey, initialIsAuthenticated }: { survey: any; in
     if (missingRequired.length > 0) {
       toast({
         title: "Missing Information",
-        description: "Please answer all required questions across all sections before submitting.",
+        description: `Please answer all required questions across all sections before submitting. (${missingRequired.length} remaining)`,
         variant: "destructive"
       });
       return;
     }
 
-    // Server Action migration will happen in Step 4
+    setIsSubmitting(true);
+
     const formattedAnswers = Object.entries(answers).map(([qId, val]) => {
       const id = Number(qId);
       if (Array.isArray(val)) {
@@ -169,8 +170,6 @@ export function SurveyForm({ survey, initialIsAuthenticated }: { survey: any; in
       }
       return { questionId: id, value: String(val) };
     });
-
-    console.log("Submitting survey response...", { surveyId: survey.id, answers: formattedAnswers });
     
     const result = await submitSurveyResponse(survey.id, {
       answers: formattedAnswers,
@@ -187,6 +186,7 @@ export function SurveyForm({ survey, initialIsAuthenticated }: { survey: any; in
         variant: "destructive",
       });
     }
+    setIsSubmitting(false);
   };
 
   const renderQuestionInput = (question: any) => {
@@ -314,50 +314,58 @@ export function SurveyForm({ survey, initialIsAuthenticated }: { survey: any; in
         );
 
       case "rating":
-        const ratingVal = value ? parseInt(value, 10) : 0;
         return (
-          <div className="pt-8 pb-4 px-2 mt-2 bg-muted/10 rounded-xl border border-border/40 px-6">
-            <div className="flex items-center gap-4 mb-8">
-              <Button
-                variant="outline"
-                size="icon"
-                className="rounded-full shrink-0 h-10 w-10 border-border/40 hover:bg-background"
-                onClick={() => handleAnswerChange(question.id, Math.max(1, ratingVal - 1).toString())}
-                disabled={ratingVal <= 1 && !!ratingVal}
-              >
-                <Minus className="h-4 w-4" />
-              </Button>
-              
-              <Slider 
-                value={[ratingVal || 5]} 
-                min={1} 
-                max={10} 
-                step={1}
-                onValueChange={(vals: number[]) => handleAnswerChange(question.id, vals[0].toString())}
-                className="flex-1"
-              />
-
-              <Button
-                variant="outline"
-                size="icon"
-                className="rounded-full shrink-0 h-10 w-10 border-border/40 hover:bg-background"
-                onClick={() => handleAnswerChange(question.id, Math.min(10, (ratingVal || 5) + 1).toString())}
-                disabled={ratingVal >= 10}
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
+          <div className="mt-4">
+            {/* Desktop: compact button row */}
+            <div className="hidden sm:flex rounded-lg overflow-hidden border border-border/60 shadow-sm divide-x divide-border/60 bg-muted/5">
+              {LIKERT_FULL.map((label, idx) => {
+                const ratingValue = String(idx + 1);
+                const isSelected = value === ratingValue;
+                return (
+                  <TooltipProvider key={idx}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          onClick={() => handleAnswerChange(question.id, ratingValue)}
+                          data-state={isSelected ? "checked" : "unchecked"}
+                          className={`flex-1 py-4 text-sm font-semibold transition-all duration-200 outline-none
+                            ${LIKERT_COLORS[idx]}
+                            ${!isSelected ? 'text-muted-foreground' : ''}
+                          `}
+                        >
+                          {LIKERT_SHORT[idx]}
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom" className="font-medium">
+                        {idx + 1} — {label}
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                );
+              })}
             </div>
             
-            <div className="flex justify-between items-center text-sm font-medium">
-              <span className="text-muted-foreground">1 - Lowest</span>
-              <div className="text-center">
-                <div className={`w-14 h-14 flex items-center justify-center text-2xl font-bold rounded-full shadow-lg ring-4 transition-all duration-200 scale-110 
-                  ${ratingVal ? 'bg-primary text-primary-foreground ring-primary/20' : 'bg-muted text-muted-foreground ring-muted/20'}
-                `}>
-                  {ratingVal || '-'}
-                </div>
-              </div>
-              <span className="text-muted-foreground">10 - Highest</span>
+            {/* Mobile: stacked buttons */}
+            <div className="flex flex-col sm:hidden gap-2 mt-4">
+              {LIKERT_FULL.map((label, idx) => {
+                const ratingValue = String(idx + 1);
+                const isSelected = value === ratingValue;
+                return (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => handleAnswerChange(question.id, ratingValue)}
+                    data-state={isSelected ? "checked" : "unchecked"}
+                    className={`w-full py-3 px-4 rounded-lg text-sm font-semibold text-left transition-all border border-border/60 shadow-sm
+                      ${LIKERT_COLORS[idx]}
+                      ${!isSelected ? 'bg-card text-foreground' : ''}
+                    `}
+                  >
+                    {idx + 1} — {label}
+                  </button>
+                );
+              })}
             </div>
           </div>
         );
@@ -387,15 +395,22 @@ export function SurveyForm({ survey, initialIsAuthenticated }: { survey: any; in
         {sections.map((sec, idx) => {
           const isPast = idx < currentSectionIndex;
           const isCurrent = idx === currentSectionIndex;
+          const sectionComplete = sec.questions.every((q: any) => {
+            const val = answers[q.id];
+            if (Array.isArray(val)) return val.length > 0;
+            return val !== undefined && val !== "";
+          });
           return (
             <div 
               key={sec.title} 
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-1.5
                 ${isCurrent ? 'bg-primary text-primary-foreground shadow-md' : 
+                  isPast && sectionComplete ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20' :
                   isPast ? 'bg-primary/10 text-primary border border-primary/20' : 
                   'bg-muted/50 text-muted-foreground border border-border/50'}
               `}
             >
+              {sectionComplete && !isCurrent && <CheckCircle2 className="w-3.5 h-3.5" />}
               Step {idx + 1}: {sec.title.replace(/^Section [A-Z]:\s*/i, '')}
             </div>
           );
@@ -419,14 +434,29 @@ export function SurveyForm({ survey, initialIsAuthenticated }: { survey: any; in
           </div>
 
           <div className="space-y-10">
-            {sectionQuestions.map((q) => (
-              <div key={q.id}>
-                <h3 className="text-xl font-medium text-foreground leading-snug">
-                  {q.text}
-                </h3>
-                {renderQuestionInput(q)}
-              </div>
-            ))}
+            {sectionQuestions.map((q, qIdx) => {
+              const globalIdx = questions.findIndex((gq: any) => gq.id === q.id);
+              const isAnswered = (() => {
+                const val = answers[q.id];
+                if (Array.isArray(val)) return val.length > 0;
+                return val !== undefined && val !== "";
+              })();
+              return (
+                <div key={q.id} className={`rounded-xl p-5 -mx-5 transition-colors ${isAnswered ? 'bg-emerald-500/[0.03]' : ''}`}>
+                  <div className="flex items-start gap-3">
+                    <span className={`text-xs font-bold mt-1.5 px-2 py-0.5 rounded-full shrink-0 transition-colors ${
+                      isAnswered ? 'bg-emerald-500/10 text-emerald-600' : 'bg-muted text-muted-foreground'
+                    }`}>
+                      Q{globalIdx + 1}
+                    </span>
+                    <h3 className="text-xl font-medium text-foreground leading-snug">
+                      {q.text}
+                    </h3>
+                  </div>
+                  {renderQuestionInput(q)}
+                </div>
+              );
+            })}
           </div>
         </motion.div>
       </AnimatePresence>
@@ -444,12 +474,22 @@ export function SurveyForm({ survey, initialIsAuthenticated }: { survey: any; in
             Previous
           </Button>
           
+          <div className="text-xs text-muted-foreground font-medium hidden sm:block">
+            {sectionAnsweredCount}/{sectionQuestions.length} answered
+          </div>
           <Button 
             size="lg" 
             onClick={handleNextSection} 
+            disabled={isSubmitting}
             className="px-8 rounded-full font-semibold shadow-md text-base"
           >
-            {currentSectionIndex === totalSections - 1 ? "Submit Response" : <>Next Section <ChevronRight className="w-5 h-5 ml-2" /></>}
+            {isSubmitting ? (
+              <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Submitting...</>
+            ) : currentSectionIndex === totalSections - 1 ? (
+              "Submit Response"
+            ) : (
+              <>Next Section <ChevronRight className="w-5 h-5 ml-2" /></>
+            )}
           </Button>
         </div>
       </div>

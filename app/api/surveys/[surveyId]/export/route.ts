@@ -42,10 +42,14 @@ export async function GET(
   }
 
   // Generate CSV
-  const header = ["Timestamp", ...questions.map((q) => `"${q.text.replace(/"/g, '""')}"`)];
+  const header = ["Participant ID", "Participant Type", "Timestamp", ...questions.map((q) => `"${q.text.replace(/"/g, '""')}"`)];
   const rows = responses.map((r) => {
     const rAnswers = allAnswers.filter((a) => a.responseId === r.id);
+    const participantId = r.userId || r.anonymousId || `response-${r.id}`;
+    const participantType = r.userId ? "Authenticated" : "Anonymous";
     const row = [
+      `"${participantId}"`,
+      participantType,
       r.submittedAt.toISOString(),
       ...questions.map((q) => {
         const ans = rAnswers.find((a) => a.questionId === q.id);

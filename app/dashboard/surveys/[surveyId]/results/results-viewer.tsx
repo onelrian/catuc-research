@@ -35,8 +35,7 @@ const DEMO_COLORS = [
 const YES_NO_COLORS = ['#10b981', '#ef4444'];
 
 const RATING_GRADIENT = [
-  '#ef4444', '#f97316', '#f59e0b', '#eab308', '#84cc16',
-  '#22c55e', '#10b981', '#14b8a6', '#06b6d4', '#3b82f6',
+  '#ef4444', '#f97316', '#a3a3a3', '#22c55e', '#10b981',
 ];
 
 const SECTION_COLORS = ['#6366f1', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6'];
@@ -54,14 +53,17 @@ function calcStdDev(values: number[], mean: number): number {
   return Math.sqrt(squaredDiffs.reduce((s, v) => s + v, 0) / (values.length - 1));
 }
 
-function interpretScore(mean: number, max: number = 10): string {
-  const pct = mean / max;
-  if (pct >= 0.8) return "Strong Agreement";
-  if (pct >= 0.6) return "Moderate Agreement";
-  if (pct >= 0.4) return "Neutral";
-  if (pct >= 0.2) return "Moderate Disagreement";
+function interpretScore(mean: number): string {
+  if (mean >= 4.2) return "Strong Agreement";
+  if (mean >= 3.4) return "Moderate Agreement";
+  if (mean >= 2.6) return "Neutral";
+  if (mean >= 1.8) return "Moderate Disagreement";
   return "Strong Disagreement";
 }
+
+const LIKERT_LABELS: Record<string, string> = {
+  '1': 'SD', '2': 'D', '3': 'N', '4': 'A', '5': 'SA',
+};
 
 // ── Main Component ──────────────────────────────────────────
 export function ResultsViewer({ results, rawData, surveyId }: { results: any, rawData: any[], surveyId: number }) {
@@ -112,7 +114,7 @@ export function ResultsViewer({ results, rawData, surveyId }: { results: any, ra
       .map(s => ({
         section: s.shortName,
         mean: parseFloat(s.meanScore!.toFixed(2)),
-        fullMark: 10,
+        fullMark: 5,
       }));
   }, [sectionData]);
 
@@ -191,7 +193,7 @@ export function ResultsViewer({ results, rawData, surveyId }: { results: any, ra
             <CardTitle className="text-xl font-serif flex items-center gap-2">
               <TrendingUp className="w-5 h-5 text-primary" /> Cross-Section Comparison
             </CardTitle>
-            <p className="text-sm text-muted-foreground mt-1">Mean scores across all research dimensions (scale 1–10)</p>
+            <p className="text-sm text-muted-foreground mt-1">Mean scores across all research dimensions (1 = Strongly Disagree, 5 = Strongly Agree)</p>
           </CardHeader>
           <CardContent className="p-6">
             <div className="h-[350px] w-full">
@@ -202,7 +204,7 @@ export function ResultsViewer({ results, rawData, surveyId }: { results: any, ra
                     dataKey="section" 
                     tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11, fontWeight: 600 }} 
                   />
-                  <PolarRadiusAxis angle={90} domain={[0, 10]} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} />
+                  <PolarRadiusAxis angle={90} domain={[0, 5]} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} />
                   <Radar name="Mean Score" dataKey="mean" stroke="#6366f1" fill="#6366f1" fillOpacity={0.25} strokeWidth={2} />
                   <RechartsTooltip
                     formatter={(value: number) => [value.toFixed(2), 'Mean Score']}
@@ -252,7 +254,7 @@ export function ResultsViewer({ results, rawData, surveyId }: { results: any, ra
                 {section.meanScore !== null && (
                   <div className="flex items-center gap-3 flex-wrap">
                     <div className="px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-bold">
-                      Mean: {section.meanScore.toFixed(2)} / 10
+                      Mean: {section.meanScore.toFixed(2)} / 5
                     </div>
                     <div className="px-3 py-1.5 rounded-full bg-muted/50 text-muted-foreground text-xs font-semibold">
                       {interpretScore(section.meanScore)}
@@ -378,9 +380,9 @@ function QuestionCard({ qr }: { qr: any }) {
 function RatingChart({ qr }: { qr: any }) {
   const distribution = qr.ratingDistribution || {};
   
-  // Build data for all 10 rating values
-  const data = Array.from({ length: 10 }, (_, i) => ({
-    rating: String(i + 1),
+  // Build data for all 5 Likert values
+  const data = Array.from({ length: 5 }, (_, i) => ({
+    rating: LIKERT_LABELS[String(i + 1)] || String(i + 1),
     count: distribution[String(i + 1)] || 0,
   }));
 

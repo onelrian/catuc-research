@@ -40,6 +40,24 @@ export default async function SurveyParticipationPage({
   if (surveyRows.length === 0) notFound();
   
   const survey = surveyRows[0];
+
+  // Show notice for archived/deactivated surveys
+  if (!survey.isActive) {
+    return (
+      <Layout>
+        <div className="max-w-2xl mx-auto text-center py-24 px-8 mt-12 bg-muted/20 border rounded-2xl">
+          <h2 className="text-3xl font-serif font-bold mb-4">Study Closed</h2>
+          <p className="text-muted-foreground mb-8">This research study is no longer accepting responses. Please check the home page for active studies.</p>
+          <a href="/">
+            <button className="px-8 py-3 rounded-full bg-primary text-primary-foreground font-semibold">
+              View Active Studies
+            </button>
+          </a>
+        </div>
+      </Layout>
+    );
+  }
+
   const questions = await db
     .select()
     .from(questionsTable)
