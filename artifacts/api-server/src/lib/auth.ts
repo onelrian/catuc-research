@@ -16,15 +16,11 @@ function shouldUseSecureCookies(): boolean {
   return process.env.NODE_ENV !== "development";
 }
 
-function getCookieSameSite(): "lax" {
-  return "lax";
-}
-
 export function getSessionCookieOptions(): CookieOptions {
   return {
     httpOnly: true,
     secure: shouldUseSecureCookies(),
-    sameSite: getCookieSameSite(),
+    sameSite: "lax",
     path: "/",
     maxAge: SESSION_TTL,
   };
@@ -33,8 +29,8 @@ export function getSessionCookieOptions(): CookieOptions {
 export function getTransientCookieOptions(): CookieOptions {
   return {
     httpOnly: true,
-    secure: shouldUseSecureCookies(),
-    sameSite: getCookieSameSite(),
+    secure: true,
+    sameSite: "none",
     path: "/",
     maxAge: OIDC_COOKIE_TTL,
   };
