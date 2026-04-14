@@ -98,6 +98,8 @@ router.get("/login", async (req: Request, res: Response) => {
   const config = await getOidcConfig();
   const callbackUrl = `${getOrigin(req)}/api/callback`;
 
+  req.log.info({ callbackUrl }, "Auth login initiated");
+
   const returnTo = getSafeReturnTo(req.query.returnTo);
 
   const state = oidc.randomState();
@@ -133,7 +135,24 @@ router.get("/callback", async (req: Request, res: Response) => {
   const nonce = req.cookies?.nonce;
   const expectedState = req.cookies?.state;
 
+  req.log.info(
+    {
+      callbackUrl,
+      hasCookies: !!(codeVerifier && expectedState),
+      hasCodeVerifier: !!codeVerifier,
+      hasState: !!expectedState,
+      hasNonce: !!nonce,
+      queryHasCode: !!req.query.code,
+      queryHasState: !!req.query.state,
+    },
+    "Auth callback received",
+  );
+
   if (!codeVerifier || !expectedState) {
+    req.log.warn(
+      { hasCodeVerifier: !!codeVerifier, hasState: !!expectedState },
+      "Auth callback missing OIDC cookies — possible cookie domain mismatch or direct URL access",
+    );
     clearOidcCookies(res);
     res.redirect("/api/login");
     return;
@@ -143,6 +162,8 @@ router.get("/callback", async (req: Request, res: Response) => {
     `${callbackUrl}?${new URL(req.url, `http://${req.headers.host}`).searchParams}`,
   );
 
+  req.log.info({ currentUrl: currentUrl.href }, "Auth callback currentUrl constructed");
+
   let tokens: oidc.TokenEndpointResponse & oidc.TokenEndpointResponseHelpers;
   try {
     tokens = await oidc.authorizationCodeGrant(config, currentUrl, {
@@ -151,7 +172,15 @@ router.get("/callback", async (req: Request, res: Response) => {
       expectedState,
       idTokenExpected: true,
     });
-  } catch {
+  } catch (err) {
+    req.log.error(
+      {
+        error: err instanceof Error ? err.message : String(err),
+        callbackUrl,
+        currentUrl: currentUrl.href,
+      },
+      "Auth callback OIDC token exchange failed",
+    );
     clearOidcCookies(res);
     res.redirect("/api/login");
     return;
