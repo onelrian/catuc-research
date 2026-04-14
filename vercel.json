@@ -2,12 +2,5 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
   "installCommand": "pnpm install --no-frozen-lockfile",
-  "buildCommand": "pnpm run build",
-  "outputDirectory": "artifacts/resume-site/dist/public",
-  "rewrites": [
-    {
-      "source": "/:path((?!api(?:/|$)).*)",
-      "destination": "/index.html"
-    }
-  ]
+  "buildCommand": "pnpm run build"
 }

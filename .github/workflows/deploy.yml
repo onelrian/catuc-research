@@ -34,20 +34,6 @@ jobs:
       - name: Build Project
         run: pnpm run build
 
-      - name: Database Push
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: |
-          npx pnpm --filter @workspace/db run push
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-
-      - name: Database Seed
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: |
-          pnpm dlx tsx artifacts/api-server/src/seed.ts
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-
       - name: Deploy to Vercel
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
