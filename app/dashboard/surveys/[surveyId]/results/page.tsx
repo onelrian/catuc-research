@@ -68,6 +68,7 @@ export default async function SurveyResultsPage({
       questionId: q.id,
       questionText: q.text,
       questionType: q.type,
+      section: q.section || "General",
       totalAnswers,
       textAnswers,
       choiceCounts,
