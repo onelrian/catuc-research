@@ -421,7 +421,19 @@ export default function SurveyPage() {
     }
   };
 
-  if (!currentSection) return null;
+  if (!currentSection) {
+    return (
+      <Layout>
+        <div className="max-w-xl mx-auto text-center py-20 px-8 border rounded-2xl bg-muted/20 mt-12 shadow-sm">
+          <h2 className="text-2xl font-serif font-semibold mb-4 text-foreground">Survey Not Available</h2>
+          <p className="text-lg text-muted-foreground mb-8 max-w-sm mx-auto leading-relaxed">
+            This survey has no questions yet. Please check back later.
+          </p>
+          <Button variant="outline" size="lg" onClick={() => setLocation("/")}>Return to Directory</Button>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
