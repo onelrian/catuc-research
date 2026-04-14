@@ -35,6 +35,8 @@ jobs:
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           npx vercel link --yes --project catuc-research-platform-bamenda --scope onelrians-projects --token "${{ secrets.VERCEL_TOKEN }}"
-          npx vercel deploy --prod --yes --token "${{ secrets.VERCEL_TOKEN }}"
+          npx vercel pull --yes --environment=production --token "${{ secrets.VERCEL_TOKEN }}"
+          npx vercel build --prod --token "${{ secrets.VERCEL_TOKEN }}"
+          npx vercel deploy --prebuilt --prod --token "${{ secrets.VERCEL_TOKEN }}"
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
