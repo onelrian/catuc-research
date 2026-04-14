@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { SurveyForm } from "./survey-form";
 import { Metadata } from "next";
 import { auth } from "@/lib/auth";
+import { Layout } from "@/components/layout";
 
 export async function generateMetadata({ 
   params 
@@ -52,5 +53,9 @@ export default async function SurveyParticipationPage({
     questions,
   };
 
-  return <SurveyForm survey={enrichedSurvey} initialIsAuthenticated={!!session?.user} />;
+  return (
+    <Layout>
+      <SurveyForm survey={enrichedSurvey} initialIsAuthenticated={!!session?.user} />
+    </Layout>
+  );
 }

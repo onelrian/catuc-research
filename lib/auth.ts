@@ -48,7 +48,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async session({ session, user }: { session: any; user: any }) {
       if (session.user) {
         session.user.id = user.id;
-        session.user.isAdmin = user.isAdmin ?? false;
+        // Query DB directly to always get the latest isAdmin value.
+        // The adapter's `user` object can be stale when signIn updates it
+        // in the same request cycle (race condition on first login).
+        const [freshUser] = await db
+          .select({ isAdmin: usersTable.isAdmin })
+          .from(usersTable)
+          .where(eq(usersTable.id, user.id));
+        session.user.isAdmin = freshUser?.isAdmin ?? false;
       }
       return session;
     },
