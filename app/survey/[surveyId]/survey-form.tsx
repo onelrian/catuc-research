@@ -410,7 +410,6 @@ export function SurveyForm({ survey, initialIsAuthenticated }: { survey: any; in
               <div key={q.id}>
                 <h3 className="text-xl font-medium text-foreground leading-snug">
                   {q.text}
-                  {q.isRequired && <span className="text-destructive ml-2 font-bold">*</span>}
                 </h3>
                 {renderQuestionInput(q)}
               </div>
