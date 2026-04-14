@@ -54,6 +54,8 @@ export const createQuestionSchema = z.object({
   options: z.array(z.string()).optional().default([]),
   isRequired: z.boolean().optional().default(true),
   orderIndex: z.number().optional().default(0),
+  section: z.string().optional(),
+  sectionDescription: z.string().optional(),
 });
 
 export const createSurveySchema = z.object({

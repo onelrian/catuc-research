@@ -212,32 +212,43 @@ router.post("/surveys/:surveyId/responses", async (req, res) => {
     const parsed = submitResponseSchema.safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ error: "Invalid request body" });
 
-    let response;
-    try {
-      [response] = await db.insert(responsesTable).values({ surveyId, userId }).returning();
-    } catch (err) {
-      if ((err as { code?: string }).code === "23505") {
-        return res.status(400).json({ error: "You have already participated in this study" });
+    const result = await db.transaction(async (tx) => {
+      let response;
+      try {
+        [response] = await tx.insert(responsesTable).values({ surveyId, userId }).returning();
+      } catch (err) {
+        if ((err as { code?: string }).code === "23505") {
+          return { error: "You have already participated in this study", status: 400 };
+        }
+        throw err;
       }
-      throw err;
-    }
 
-    if (parsed.data.answers.length > 0) {
-      await db.insert(answersTable).values(
-        parsed.data.answers.map((a) => ({
-          responseId: response.id,
-          questionId: a.questionId,
-          value: a.value ?? null,
-          values: a.values ?? [],
-        }))
-      );
-    }
+      if (parsed.data.answers.length > 0) {
+        await tx.insert(answersTable).values(
+          parsed.data.answers.map((a) => ({
+            responseId: response.id,
+            questionId: a.questionId,
+            value: a.value ?? null,
+            values: a.values ?? [],
+          }))
+        );
+      }
 
-    return res.status(201).json({
-      id: response.id,
-      surveyId: response.surveyId,
-      submittedAt: response.submittedAt.toISOString(),
+      return { 
+        data: {
+          id: response.id,
+          surveyId: response.surveyId,
+          submittedAt: response.submittedAt.toISOString(),
+        }, 
+        status: 201 
+      };
     });
+
+    if ("error" in result) {
+      return res.status(result.status).json({ error: result.error });
+    }
+
+    return res.status(result.status).json(result.data);
   } catch (err) {
     req.log.error({ err }, "Failed to submit response");
     return res.status(500).json({ error: "Internal server error" });

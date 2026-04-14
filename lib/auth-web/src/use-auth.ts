@@ -18,7 +18,9 @@ export function useAuth(): AuthState {
   useEffect(() => {
     let cancelled = false;
 
-    fetch("/api/auth/user", {
+    // Add a cache-buster query param to force skip Vercel/CDN edge caches
+    const cacheBuster = `t=${Date.now()}`;
+    fetch(`/api/auth/user?${cacheBuster}`, {
       credentials: "include",
       cache: "no-store",
       headers: {
@@ -31,11 +33,13 @@ export function useAuth(): AuthState {
       })
       .then((data) => {
         if (!cancelled) {
+          console.log(`[Auth Hook] User check result:`, data.user ? `Authenticated (${data.user.email})` : "Not Authenticated");
           setUser(data.user ?? null);
           setIsLoading(false);
         }
       })
-      .catch(() => {
+      .catch((err) => {
+        console.warn(`[Auth Hook] Session check failed:`, err);
         if (!cancelled) {
           setUser(null);
           setIsLoading(false);
@@ -48,11 +52,11 @@ export function useAuth(): AuthState {
   }, []);
 
   const login = useCallback((returnTo?: string) => {
-    const currentPath =
-      returnTo ||
-      `${window.location.pathname}${window.location.search}${window.location.hash}` ||
-      "/";
-    window.location.href = `/api/login?returnTo=${encodeURIComponent(currentPath)}`;
+    const currentUrl = new URL(window.location.href);
+    const destination = returnTo || (currentUrl.pathname + currentUrl.search + currentUrl.hash) || "/";
+    
+    console.log(`[Auth Hook] Initiating login, returnTo: ${destination}`);
+    window.location.href = `/api/login?returnTo=${encodeURIComponent(destination)}`;
   }, []);
 
   const logout = useCallback(() => {

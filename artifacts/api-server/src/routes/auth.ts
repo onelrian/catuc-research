@@ -78,8 +78,11 @@ async function upsertUser(claims: Record<string, unknown>) {
 }
 
 router.get("/auth/user", (req: Request, res: Response) => {
-  res.setHeader("Cache-Control", "no-store, private, max-age=0");
+  // Use aggressive cache-busting headers to prevent Vercel/CDN caching
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
   res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
+  res.setHeader("Surrogate-Control", "no-store");
   res.setHeader("Vary", "Cookie");
 
   const authenticated = req.isAuthenticated();
@@ -176,9 +179,18 @@ router.get("/callback", async (req: Request, res: Response) => {
     return;
   }
 
-  const currentUrl = new URL(
-    `${callbackUrl}?${new URL(req.url, `http://${req.headers.host || "localhost"}`).searchParams}`,
-  );
+  // Build the current URL by surgically extracting only OIDC relevant params
+  // This prevents Vercel-internal parameters (...path, path) from polluting the callback URI
+  const oidcParams = new URL(req.url, `http://${req.headers.host || "localhost"}`).searchParams;
+  const filteredParams = new URLSearchParams();
+  
+  // Explicitly copy only expected OIDC parameters
+  for (const key of ["code", "state", "iss", "session_state", "error", "error_description"]) {
+    const val = oidcParams.get(key);
+    if (val) filteredParams.set(key, val);
+  }
+
+  const currentUrl = new URL(`${callbackUrl}?${filteredParams.toString()}`);
 
   console.log(`[Auth Debug] constructed currentUrl: ${currentUrl.href}`);
   req.log.info({ currentUrl: currentUrl.href }, "Auth callback currentUrl constructed");
