@@ -24,7 +24,7 @@ async function seed() {
       { section: "SECTION A: DEMOGRAPHIC INFORMATION", text: "Gender", type: "multiple_choice", options: ["Male", "Female", "Prefer not to say"], orderIndex: 0 },
       { section: "SECTION A: DEMOGRAPHIC INFORMATION", text: "Age Group", type: "multiple_choice", options: ["Below 18", "18 – 22", "23 – 27", "28 and above"], orderIndex: 1 },
       { section: "SECTION A: DEMOGRAPHIC INFORMATION", text: "Level of Study", type: "multiple_choice", options: ["100 Level", "200 Level", "300 Level", "400 Level", "500 and above", "Postgraduate"], orderIndex: 2 },
-      { section: "SECTION A: DEMOGRAPHIC INFORMATION", text: "Faculty / School", type: "multiple_choice", options: ["Business & Management", "Engineering & Technology", "Health Sciences", "Tropical agriculture", "Other"], orderIndex: 3 },
+      { section: "SECTION A: DEMOGRAPHIC INFORMATION", text: "Faculty / School", type: "multiple_choice", options: ["Business & Management", "Engineering & Technology", "Faculty of Science", "Tropical agriculture", "Other"], orderIndex: 3 },
       { section: "SECTION A: DEMOGRAPHIC INFORMATION", text: "Marital Status", type: "multiple_choice", options: ["Single", "Married", "Other"], orderIndex: 4 },
       { section: "SECTION A: DEMOGRAPHIC INFORMATION", text: "Do you have a part-time job or business currently?", type: "yes_no", options: ["Yes", "No"], orderIndex: 5 },
       { section: "SECTION A: DEMOGRAPHIC INFORMATION", text: "Are either of your parents / guardians self-employed or a business owner?", type: "multiple_choice", options: ["Yes", "No", "Not sure"], orderIndex: 6 },
